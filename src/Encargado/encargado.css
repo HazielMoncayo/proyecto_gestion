@@ -1,0 +1,372 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: 'Segoe UI', sans-serif; }
+
+.enc-app {
+  min-height: 100vh;
+  background: #f1f5f9;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* HEADER */
+.enc-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.enc-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.enc-header-logo > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.enc-header-titulo {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.enc-header-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.enc-header-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.enc-header-avatar {
+  width: 36px;
+  height: 36px;
+  background: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.enc-header-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.enc-badge-rol {
+  background: #16a34a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.enc-btn-salir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.enc-btn-salir:hover { background: #f3f4f6; }
+
+/* MAIN */
+.enc-main {
+  padding: 28px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ALERTA */
+.enc-alerta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.enc-alerta-icono { font-size: 20px; margin-top: 1px; }
+
+.enc-alerta-titulo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #c2410c;
+  margin-bottom: 3px;
+}
+
+.enc-alerta-texto {
+  font-size: 13px;
+  color: #ea580c;
+}
+
+/* TABS */
+.enc-tabs-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.enc-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.enc-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.enc-tab:hover { background: #f3f4f6; color: #111827; }
+
+.enc-tab.activo {
+  background: #f0fdf4;
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.enc-tab-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+  margin-left: 2px;
+}
+
+/* STATS */
+.enc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.enc-stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.enc-stat-label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.enc-stat-numero {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.enc-stat-numero.naranja { color: #ea580c; }
+.enc-stat-numero.verde   { color: #16a34a; }
+.enc-stat-numero.rojo    { color: #ef4444; }
+.enc-stat-numero.azul    { color: #4F46E5; }
+
+.enc-stat-icono {
+  font-size: 28px;
+  opacity: 0.2;
+}
+
+/* SECCIONES */
+.enc-seccion-titulo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.enc-subseccion-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+  margin-top: 4px;
+}
+
+/* PENDIENTES */
+.enc-pendientes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.enc-pendiente-card {
+  background: #ffffff;
+  border: 1.5px solid #fef08a;
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.enc-pendiente-info { flex: 1; }
+
+.enc-pendiente-cancha {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.enc-pendiente-detalles {
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.enc-pendiente-acciones {
+  display: flex;
+  gap: 10px;
+}
+
+.enc-btn-aprobar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.enc-btn-aprobar:hover { background: #15803d; }
+
+.enc-btn-rechazar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.enc-btn-rechazar:hover { background: #dc2626; }
+
+/* TABLA */
+.enc-tabla-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.enc-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.enc-tabla th {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  letter-spacing: 0.05em;
+}
+
+.enc-tabla td {
+  padding: 16px 20px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.enc-tabla tr:last-child td { border-bottom: none; }
+.enc-tabla tr:hover td { background: #f9fafb; }
+
+.enc-tabla-bold {
+  font-weight: 700;
+  color: #111827;
+}
+
+/* BADGES */
+.enc-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-verde    { background: #dcfce7; color: #15803d; }
+.badge-amarillo { background: #fef9c3; color: #a16207; }
+.badge-rojo     { background: #fee2e2; color: #b91c1c; }
+
+/* AYUDA */
+.enc-help-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #374151;
+  color: #ffffff;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.enc-help-btn:hover { background: #111827; }

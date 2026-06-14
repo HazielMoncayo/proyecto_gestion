@@ -1,0 +1,162 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.signup-wrapper {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Panel izquierdo */
+.signup-left {
+  width: 40%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.signup-left-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 60, 20, 0.55);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 40px;
+}
+
+.signup-brand {
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffffff;
+  font-style: italic;
+  margin-bottom: 12px;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+}
+
+.signup-frase {
+  font-size: 16px;
+  color: #ddffdd;
+  line-height: 1.5;
+}
+
+/* Panel derecho */
+.signup-right {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+  background: #ffffff;
+}
+
+.signup-titulo {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 15px;
+}
+
+.signup-subtitulo {
+  font-size: 18px;
+  color: #6b6b8a;
+  margin-bottom: 32px;
+}
+
+.signup-link {
+  color: #5B52F0;
+  text-decoration: none;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+  font-style: italic;
+}
+
+.signup-input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1.5px solid #e0e0ee;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1a1a2e;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.signup-input:focus {
+  border-color: #5B52F0;
+}
+
+.signup-input::placeholder {
+  color: #b0b0cc;
+}
+
+.signup-error {
+  background: #fff0f0;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #cc3333;
+  margin-bottom: 16px;
+}
+
+.signup-btn {
+  padding: 14px;
+  background: #5B52F0;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 4px;
+  align-self: flex-start;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.signup-btn:hover {
+  background: #4a42d6;
+}
+
+.signup-rol-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.signup-rol-btn {
+  padding: 8px 20px;
+  border: 2px solid #5B52F0;
+  border-radius: 20px;
+  background: transparent;
+  color: #5B52F0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.signup-rol-btn.activo {
+  background: #5B52F0;
+  color: #ffffff;
+}
+
+.signup-rol-btn:hover {
+  background: #5B52F0;
+  color: #ffffff;
+}
+
+.signup-input-gerente {
+  border-color: #5B52F0;
+  background: #f5f4ff;
+}
