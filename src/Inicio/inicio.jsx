@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./inicio.css";
 import fondo from "./fondo.avif";
 
@@ -6,22 +7,46 @@ export default function Inicio() {
     const [correo, setCorreo] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [error, setError] = useState("");
+    const [cargando, setCargando] = useState(false);
 
-    const usuariosEjemplo = [
-        { correo: "admin@universidad.edu", contrasena: "admin123" },
-        { correo: "usuario@universidad.edu", contrasena: "usuario123" },
-    ];
+    const navigate = useNavigate();
 
-    const handleSubmit = () => {
-        const encontrado = usuariosEjemplo.find(
-            (u) => u.correo === correo && u.contrasena === contrasena
-        );
+    const handleSubmit = async () => {
+        if (!correo || !contrasena) {
+            setError("Por favor completa todos los campos.");
+            return;
+        }
 
-        if (encontrado) {
-            setError("");
-            alert("Sesión iniciada correctamente");
-        } else {
-            setError("Credenciales incorrectas. Intenta con alguno de los usuarios de ejemplo.");
+        setCargando(true);
+        setError("");
+
+        try {
+            const res = await fetch("http://localhost:3000/rpc/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: correo, password: contrasena }),
+            });
+
+            if (!res.ok) {
+                setError("Credenciales incorrectas.");
+                setCargando(false);
+                return;
+            }
+
+            const usuario = await res.json();
+
+            // Guardamos el usuario logueado para usarlo en otras pantallas
+            localStorage.setItem("usuario", JSON.stringify(usuario));
+
+            if (usuario.rol === "encargado") {
+                navigate("/encargado");
+            } else {
+                navigate("/estudiante");
+            }
+        } catch (err) {
+            setError("No se pudo conectar con el servidor.");
+        } finally {
+            setCargando(false);
         }
     };
 
@@ -82,8 +107,8 @@ export default function Inicio() {
                         </div>
                     )}
 
-                    <button className="inicio-btn" onClick={handleSubmit}>
-                        Iniciar Sesión
+                    <button className="inicio-btn" onClick={handleSubmit} disabled={cargando}>
+                        {cargando ? "Ingresando..." : "Iniciar Sesión"}
                     </button>
                     <p className="inicio-registro">
                         ¿No tienes una cuenta?{" "}

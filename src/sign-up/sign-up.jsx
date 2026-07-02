@@ -11,10 +11,11 @@ export default function SignUp() {
   const [confirmar, setConfirmar] = useState("");
   const [claveEncargado, setClaveEncargado] = useState("");
   const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!nombre || !correo || !contrasena || !confirmar) {
       setError("Por favor completa todos los campos.");
       return;
@@ -28,17 +29,47 @@ export default function SignUp() {
       return;
     }
 
-    setNombre("");
-    setCorreo("");
-    setContrasena("");
-    setConfirmar("");
-    setClaveEncargado("");
+    setCargando(true);
     setError("");
 
-    if (rol === "encargado") {
-      navigate("/encargado");
-    } else {
-      navigate("/estudiante");
+    try {
+      const res = await fetch("http://localhost:3000/rpc/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          email: correo,
+          password: contrasena,
+          rol,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setError(err.message || "No se pudo registrar el usuario.");
+        setCargando(false);
+        return;
+      }
+
+      const usuario = await res.json();
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+
+      setNombre("");
+      setCorreo("");
+      setContrasena("");
+      setConfirmar("");
+      setClaveEncargado("");
+      setError("");
+
+      if (rol === "encargado") {
+        navigate("/encargado");
+      } else {
+        navigate("/estudiante");
+      }
+    } catch (err) {
+      setError("No se pudo conectar con el servidor.");
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -114,8 +145,8 @@ export default function SignUp() {
 
         {error && <div className="signup-error">{error}</div>}
 
-        <button className="signup-btn" onClick={handleSubmit}>
-          Registrarse
+        <button className="signup-btn" onClick={handleSubmit} disabled={cargando}>
+          {cargando ? "Registrando..." : "Registrarse"}
         </button>
       </div>
     </div>
