@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './estudiante.css';
+import { supabase } from '../supaBase/supabaseClient';
 
 const canchasDemo = [
   {
@@ -141,6 +142,17 @@ export default function Estudiante() {
   const [canchaSeleccionada, setCanchaSeleccionada] = useState(null);
   const [reservas, setReservas] = useState(reservasDemoData);
   const [filtro, setFiltro] = useState('todas');
+  const [nombreUsuario, setNombreUsuario] = useState('');
+
+  useEffect(() => {
+    async function obtenerUsuario() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setNombreUsuario(user.user_metadata?.nombre || '');
+      }
+    }
+    obtenerUsuario();
+  }, []);
 
   const handleCancelar = (id) => {
     if (window.confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
@@ -186,7 +198,7 @@ export default function Estudiante() {
             </svg>
           </div>
           <div className="est-header-info">
-            <span className="est-header-nombre-user">Juan Pérez</span>
+            <span className="est-header-nombre-user">{nombreUsuario}</span>
             <span className="est-header-carrera">Ingeniería de Sistemas</span>
           </div>
           <span className="est-badge-rol">Estudiante</span>

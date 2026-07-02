@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./sign-up.css";
 import fondo from "./fondo-sign-up.jpg";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supaBase/supabaseClient";
 
 export default function SignUp() {
   const [rol, setRol] = useState("estudiante");
@@ -11,14 +12,48 @@ export default function SignUp() {
   const [confirmar, setConfirmar] = useState("");
   const [claveEncargado, setClaveEncargado] = useState("");
   const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const soloLetrasRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*$/;
+
+  const validarNombre = (valor) => {
+    return valor.trim().length >= 5 && soloLetrasRegex.test(valor);
+  };
+
+  const handleNombreChange = (e) => {
+    const valor = e.target.value;
+
+    // Bloquea cualquier caracter que no sea letra o espacio
+    if (!soloLetrasRegex.test(valor)) {
+      return;
+    }
+
+    // Limita a 30 caracteres
+    if (valor.length > 30) {
+      return;
+    }
+
+    setNombre(valor);
+  };
+
+  const handleSubmit = async () => {
     if (!nombre || !correo || !contrasena || !confirmar) {
       setError("Por favor completa todos los campos.");
       return;
     }
+
+    if (!validarNombre(nombre)) {
+      setError("El nombre debe tener al menos 5 caracteres y solo puede contener letras.");
+      return;
+    }
+
+    if (correo.length > 30) {
+      setError("El correo no puede tener más de 30 caracteres.");
+      return;
+    }
+
     if (contrasena !== confirmar) {
       setError("Las contraseñas no coinciden.");
       return;
@@ -28,12 +63,32 @@ export default function SignUp() {
       return;
     }
 
+    setError("");
+    setCargando(true);
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: correo,
+      password: contrasena,
+      options: {
+        data: {
+          nombre: nombre,
+          rol: rol,
+        },
+      },
+    });
+
+    setCargando(false);
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
     setNombre("");
     setCorreo("");
     setContrasena("");
     setConfirmar("");
     setClaveEncargado("");
-    setError("");
 
     if (rol === "encargado") {
       navigate("/encargado");
@@ -78,7 +133,8 @@ export default function SignUp() {
           className="signup-input"
           placeholder="Nombre completo"
           value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          onChange={handleNombreChange}
+          maxLength={30}
         />
         <input
           type="email"
@@ -86,6 +142,7 @@ export default function SignUp() {
           placeholder="Correo electrónico"
           value={correo}
           onChange={(e) => setCorreo(e.target.value)}
+          maxLength={30}
         />
         <input
           type="password"
@@ -114,8 +171,8 @@ export default function SignUp() {
 
         {error && <div className="signup-error">{error}</div>}
 
-        <button className="signup-btn" onClick={handleSubmit}>
-          Registrarse
+        <button className="signup-btn" onClick={handleSubmit} disabled={cargando}>
+          {cargando ? "Creando cuenta..." : "Registrarse"}
         </button>
       </div>
     </div>

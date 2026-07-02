@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './encargado.css';
+import { supabase } from '../supaBase/supabaseClient';
 
 const reservasDemo = [
   { id: '1', estudiante: 'Juan Pérez',    cancha: 'Fútbol Principal', fecha: '14/5/2026', hora: '15:00', estado: 'pendiente' },
@@ -26,6 +27,17 @@ export default function Encargado() {
   const [tabActivo, setTabActivo] = useState(0);
   const [reservas, setReservas] = useState(reservasDemo);
   const [inventario] = useState(inventarioDemo);
+  const [nombreUsuario, setNombreUsuario] = useState('');
+
+  useEffect(() => {
+    async function obtenerUsuario() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setNombreUsuario(user.user_metadata?.nombre || '');
+      }
+    }
+    obtenerUsuario();
+  }, []);
 
   const pendientes = reservas.filter(r => r.estado === 'pendiente');
   const confirmadas = reservas.filter(r => r.estado === 'confirmada');
@@ -64,7 +76,7 @@ export default function Encargado() {
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <span className="enc-header-nombre">Carlos Rodríguez</span>
+          <span className="enc-header-nombre">{nombreUsuario}</span>
           <span className="enc-badge-rol">Encargado</span>
           <button className="enc-btn-salir" onClick={() => navigate('/sign-up')}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
