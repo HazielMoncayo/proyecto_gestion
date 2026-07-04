@@ -202,7 +202,13 @@ export default function Estudiante() {
             <span className="est-header-carrera">Ingeniería de Sistemas</span>
           </div>
           <span className="est-badge-rol">Estudiante</span>
-          <button className="est-btn-salir" onClick={() => navigate('/sign-up')}>
+          <button
+            className="est-btn-salir"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate('/');
+            }}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>

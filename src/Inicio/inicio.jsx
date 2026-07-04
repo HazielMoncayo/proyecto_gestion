@@ -1,113 +1,115 @@
-    import React, { useState } from "react";
-    import "./inicio.css";
-    import fondo from "./fondo.avif";
-    import { useNavigate } from "react-router-dom";
-    import { supabase } from "../supaBase/supabaseClient";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supaBase/supabaseClient";
+import { Mail, Lock, AlertCircle } from "lucide-react";
+import fondo from "./fondo.avif";
+import sello from "./sello-epn.png";
 
-    export default function Inicio() {
-        const [correo, setCorreo] = useState("");
-        const [contrasena, setContrasena] = useState("");
-        const [error, setError] = useState("");
-        const [cargando, setCargando] = useState(false);
+export default function Inicio() {
+    const [correo, setCorreo] = useState("");
+    const [contrasena, setContrasena] = useState("");
+    const [error, setError] = useState("");
+    const [cargando, setCargando] = useState(false);
+    const navigate = useNavigate();
 
-        const navigate = useNavigate();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setCargando(true);
+        setError("");
 
-        const handleSubmit = async () => {
-            if (!correo || !contrasena) {
-                setError("Por favor completa todos los campos.");
-                return;
-            }
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({
+            email: correo,
+            password: contrasena,
+        });
 
-            setError("");
-            setCargando(true);
+        setCargando(false);
 
-            const { data, error: loginError } = await supabase.auth.signInWithPassword({
-                email: correo,
-                password: contrasena,
-            });
+        if (loginError) {
+            setError("Credenciales incorrectas.");
+            return;
+        }
 
-            setCargando(false);
+        const rol = data.user.user_metadata?.rol;
+        navigate(rol === "encargado" ? "/encargado" : "/estudiante");
+    };
 
-            if (loginError) {
-                setError("Credenciales incorrectas o correo no confirmado.");
-                return;
-            }
+    return (
+        <div
+            className="min-h-screen flex items-center justify-center bg-cover bg-center p-4 relative"
+            style={{ backgroundImage: `url(${fondo})` }}
+        >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-950/80 via-blue-900/60 to-blue-800/40"></div>
 
-            const rol = data.user.user_metadata?.rol;
-
-            if (rol === "encargado") {
-                navigate("/encargado");
-            } else {
-                navigate("/estudiante");
-            }
-        };
-
-        return (
-            <div className="inicio-bg" style={{ '--fondo': `url(${fondo})` }}>
-                <div className="inicio-overlay">
-                    <div className="inicio-header">
-                        <div className="inicio-logo">
-                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                                <polyline
-                                    points="2,14 8,6 14,20 20,10 26,14"
-                                    stroke="#6C63FF"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    fill="none"
-                                />
-                            </svg>
-                            <span className="inicio-titulo">Canchitas</span>
-                        </div>
-                        <p className="inicio-subtitulo">Sistema de Gestión de Canchas Deportivas</p>
-                    </div>
-
-                    <div className="inicio-card">
-                        <h2 className="inicio-card-titulo">Iniciar Sesión</h2>
-
-                        <div className="inicio-campo">
-                            <label className="inicio-label">Correo Electrónico</label>
-                            <div className="inicio-input-wrapper">
-                                <span className="inicio-icono">✉</span>
-                                <input
-                                    type="email"
-                                    className="inicio-input"
-                                    placeholder="usuario@universidad.edu"
-                                    value={correo}
-                                    onChange={(e) => setCorreo(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="inicio-campo">
-                            <label className="inicio-label">Contraseña</label>
-                            <div className="inicio-input-wrapper">
-                                <span className="inicio-icono">🔒</span>
-                                <input
-                                    type="password"
-                                    className="inicio-input"
-                                    placeholder="••••••••"
-                                    value={contrasena}
-                                    onChange={(e) => setContrasena(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="inicio-error">
-                                {error}
-                            </div>
-                        )}
-
-                        <button className="inicio-btn" onClick={handleSubmit} disabled={cargando}>
-                            {cargando ? "Ingresando..." : "Iniciar Sesión"}
-                        </button>
-                        <p className="inicio-registro">
-                            ¿No tienes una cuenta?{" "}
-                            <a href="/sign-up" className="inicio-link">Regístrate aquí</a>
-                        </p>
-                    </div>
+            <div className="relative z-10 w-full max-w-sm bg-white p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] animate-[fadeIn_0.4s_ease-out]">
+                <div className="text-center mb-6">
+                    <img
+                        src={sello}
+                        alt="Sello EPN"
+                        className="mx-auto mb-3 w-16 h-16 object-contain"
+                    />
+                    <h1 className="text-3xl font-bold text-blue-900">Búho-Gear</h1>
+                    <p className="text-gray-500 text-sm mt-2">Sistema Deportivo EPN</p>
                 </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Correo Institucional
+                        </label>
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="email"
+                                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition"
+                                placeholder="usuario@epn.edu.ec"
+                                value={correo}
+                                onChange={(e) => setCorreo(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Contraseña
+                        </label>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="password"
+                                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition"
+                                placeholder="••••••••"
+                                value={contrasena}
+                                onChange={(e) => setContrasena(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                            <p className="text-red-600 text-sm font-medium">{error}</p>
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-900 text-white font-bold py-3 rounded-xl hover:bg-blue-800 transition flex items-center justify-center gap-2 disabled:opacity-70"
+                        disabled={cargando}
+                    >
+                        {cargando && (
+                            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                        )}
+                        {cargando ? "Ingresando..." : "Ingresar"}
+                    </button>
+                </form>
+
+                <p className="text-center text-sm text-gray-500 mt-6">
+                    ¿No tienes una cuenta?{" "}
+                    <a href="/sign-up" className="text-blue-900 font-semibold hover:underline">
+                        Regístrate aquí
+                    </a>
+                </p>
             </div>
-        );
-    }
+        </div>
+    );
+}
