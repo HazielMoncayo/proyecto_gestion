@@ -6,6 +6,7 @@ import SignUp from './sign-up/sign-up';
 import Estudiante from './Estudiante/estudiante';
 import Encargado from './Encargado/encargado';
 import reportWebVitals from './reportWebVitals';
+import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

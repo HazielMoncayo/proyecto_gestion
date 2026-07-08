@@ -2,103 +2,71 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './estudiante.css';
 import { supabase } from '../supaBase/supabaseClient';
+import Permisos from '../permisiones/permisiones';
 
 const canchasDemo = [
   {
-    id: '1',
+    id: 'futbol-principal',
     nombre: 'Cancha de Fútbol Principal',
     ubicacion: 'Zona Deportiva A',
     capacidad: 22,
     tipo: 'Fútbol 11',
-    emoji: '🏟️'
+    emoji: '🏟️',
+    subcanchas: [
+      { id: 'fp-1', nombre: 'Cancha 1' },
+      { id: 'fp-2', nombre: 'Cancha 2' },
+      { id: 'fp-3', nombre: 'Cancha 3' },
+    ]
   },
   {
-    id: '2',
-    nombre: 'Cancha de Fútbol Rápido',
+    id: 'futbol-sala',
+    nombre: 'Cancha de Fútbol Sala',
     ubicacion: 'Zona Deportiva B',
     capacidad: 14,
-    tipo: 'Fútbol 7',
-    emoji: '⚽'
+    tipo: 'Fútbol Sala',
+    emoji: '⚽',
+    subcanchas: [
+      { id: 'fs-1', nombre: 'Cancha 1 · La Bombonera' },
+      { id: 'multiuso-basquet-futsal', nombre: 'Cancha 2 · Multiuso' },
+    ]
   },
   {
-    id: '3',
+    id: 'baloncesto',
     nombre: 'Cancha de Baloncesto',
     ubicacion: 'Zona Deportiva C',
     capacidad: 10,
     tipo: 'Baloncesto',
-    emoji: '🏀'
+    emoji: '🏀',
+    subcanchas: [
+      { id: 'bq-1', nombre: 'Cancha 1' },
+      { id: 'bq-2', nombre: 'Cancha 2' },
+      { id: 'multiuso-basquet-futsal', nombre: 'Cancha 3 · Multiuso' },
+    ]
   },
   {
-    id: '4',
+    id: 'voleibol',
     nombre: 'Cancha de Voleibol',
     ubicacion: 'Zona Deportiva D',
     capacidad: 12,
     tipo: 'Voleibol',
-    emoji: '🏐'
-  }
+    emoji: '🏐',
+    subcanchas: [
+      { id: 'vb-1', nombre: 'Cancha 1' },
+      { id: 'vb-2', nombre: 'Cancha 2' },
+      { id: 'vb-3', nombre: 'Cancha 3' },
+    ]
+  },
 ];
 
-const horariosDemo = {
-  '1': [
-    { hora: '08:00', disponible: true },
-    { hora: '09:00', disponible: true },
-    { hora: '10:00', disponible: true },
-    { hora: '11:00', disponible: false },
-    { hora: '12:00', disponible: true },
-    { hora: '13:00', disponible: true },
-    { hora: '14:00', disponible: true },
-    { hora: '15:00', disponible: false },
-    { hora: '16:00', disponible: false },
-    { hora: '17:00', disponible: true },
-    { hora: '18:00', disponible: true },
-    { hora: '19:00', disponible: true },
-    { hora: '20:00', disponible: false },
-  ],
-  '2': [
-    { hora: '08:00', disponible: true },
-    { hora: '09:00', disponible: true },
-    { hora: '10:00', disponible: true },
-    { hora: '11:00', disponible: false },
-    { hora: '12:00', disponible: true },
-    { hora: '13:00', disponible: true },
-    { hora: '14:00', disponible: true },
-    { hora: '15:00', disponible: false },
-    { hora: '16:00', disponible: false },
-    { hora: '17:00', disponible: true },
-    { hora: '18:00', disponible: true },
-    { hora: '19:00', disponible: true },
-    { hora: '20:00', disponible: false },
-  ],
-  '3': [
-    { hora: '08:00', disponible: true },
-    { hora: '09:00', disponible: false },
-    { hora: '10:00', disponible: true },
-    { hora: '11:00', disponible: true },
-    { hora: '12:00', disponible: false },
-    { hora: '13:00', disponible: true },
-    { hora: '14:00', disponible: true },
-    { hora: '15:00', disponible: true },
-    { hora: '16:00', disponible: false },
-    { hora: '17:00', disponible: true },
-    { hora: '18:00', disponible: false },
-    { hora: '19:00', disponible: true },
-    { hora: '20:00', disponible: true },
-  ],
-  '4': [
-    { hora: '08:00', disponible: true },
-    { hora: '09:00', disponible: true },
-    { hora: '10:00', disponible: false },
-    { hora: '11:00', disponible: true },
-    { hora: '12:00', disponible: true },
-    { hora: '13:00', disponible: false },
-    { hora: '14:00', disponible: true },
-    { hora: '15:00', disponible: true },
-    { hora: '16:00', disponible: true },
-    { hora: '17:00', disponible: false },
-    { hora: '18:00', disponible: true },
-    { hora: '19:00', disponible: true },
-    { hora: '20:00', disponible: true },
-  ],
+// Genera las horas del día, de 08:00 a 20:00, en formato "08:00 - 09:00"
+const generarHorasDelDia = () => {
+  const horas = [];
+  for (let h = 8; h <= 20; h++) {
+    const inicio = `${h.toString().padStart(2, '0')}:00`;
+    const fin = `${(h + 1).toString().padStart(2, '0')}:00`;
+    horas.push({ inicio, fin, label: `${inicio} - ${fin}` });
+  }
+  return horas;
 };
 
 const reservasDemoData = [
@@ -122,11 +90,11 @@ const reservasDemoData = [
   },
   {
     id: '3',
-    canchaNombre: 'Cancha de Fútbol Rápido',
+    canchaNombre: 'Cancha de Fútbol Sala',
     fecha: '2026-12-18',
     hora: '18:00',
     ubicacion: 'Zona Deportiva B',
-    tipo: 'Fútbol 7',
+    tipo: 'Fútbol Sala',
     estado: 'pendiente'
   }
 ];
@@ -140,9 +108,14 @@ export default function Estudiante() {
   const [tabActivo, setTabActivo] = useState(0);
   const [fecha, setFecha] = useState(today);
   const [canchaSeleccionada, setCanchaSeleccionada] = useState(null);
+  const [subcanchaSeleccionada, setSubcanchaSeleccionada] = useState(null);
   const [reservas, setReservas] = useState(reservasDemoData);
   const [filtro, setFiltro] = useState('todas');
   const [nombreUsuario, setNombreUsuario] = useState('');
+  const [mostrarPermisos, setMostrarPermisos] = useState(false);
+  const [slotSeleccionado, setSlotSeleccionado] = useState(null);
+  const [horariosCancha, setHorariosCancha] = useState([]);
+  const [cargandoHorarios, setCargandoHorarios] = useState(false);
 
   useEffect(() => {
     async function obtenerUsuario() {
@@ -154,10 +127,72 @@ export default function Estudiante() {
     obtenerUsuario();
   }, []);
 
+  // Trae las horas ocupadas desde Supabase para la SUBCANCHA seleccionada
+  useEffect(() => {
+    if (!subcanchaSeleccionada) {
+      setHorariosCancha([]);
+      return;
+    }
+
+    async function cargarHorarios() {
+      setCargandoHorarios(true);
+
+      const { data: ocupadas, error } = await supabase
+        .from('reservas')
+        .select('hora_inicio')
+        .eq('cancha_id', subcanchaSeleccionada.id)
+        .eq('fecha', fecha)
+        .neq('estado', 'cancelada');
+
+      if (error) {
+        console.error('Error al cargar horarios:', error);
+        setCargandoHorarios(false);
+        return;
+      }
+
+      const horasOcupadas = ocupadas.map(r => r.hora_inicio);
+      const todasLasHoras = generarHorasDelDia();
+
+      const conEstado = todasLasHoras.map(h => ({
+        horaInicio: h.inicio,
+        horaFin: h.fin,
+        hora: h.label,
+        disponible: !horasOcupadas.includes(h.inicio)
+      }));
+
+      setHorariosCancha(conEstado);
+      setCargandoHorarios(false);
+    }
+
+    cargarHorarios();
+  }, [subcanchaSeleccionada, fecha]);
+
+  const handleCanchaClick = (cancha) => {
+    setCanchaSeleccionada(cancha);
+    setSubcanchaSeleccionada(cancha.subcanchas[0]);
+  };
+
+  const handleSubcanchaClick = (subcancha) => {
+    setSubcanchaSeleccionada(subcancha);
+  };
+
   const handleCancelar = (id) => {
     if (window.confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
       setReservas(reservas.filter(r => r.id !== id));
     }
+  };
+
+  const handleSlotClick = (slot) => {
+    if (slot.disponible) {
+      setSlotSeleccionado(slot);
+      setMostrarPermisos(true);
+    }
+  };
+
+  // Se llama cuando Permisos.jsx confirma la reserva, para refrescar la grilla
+  const handleReservaCreada = () => {
+    setMostrarPermisos(false);
+    setSubcanchaSeleccionada({ ...subcanchaSeleccionada }); // fuerza recarga del useEffect
   };
 
   const reservasFiltradas = filtro === 'todas'
@@ -167,6 +202,14 @@ export default function Estudiante() {
   const fechaFormateada = new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
+
+  // Objeto combinado que se le pasa al modal de reserva (identifica la subcancha exacta)
+  const canchaParaReserva = canchaSeleccionada && subcanchaSeleccionada
+    ? {
+        id: subcanchaSeleccionada.id,
+        nombre: `${canchaSeleccionada.nombre} · ${subcanchaSeleccionada.nombre}`
+      }
+    : null;
 
   return (
     <div className="est-app">
@@ -238,7 +281,11 @@ export default function Estudiante() {
                 type="date"
                 className="est-fecha-input"
                 value={fecha}
-                onChange={(e) => { setFecha(e.target.value); setCanchaSeleccionada(null); }}
+                onChange={(e) => {
+                  setFecha(e.target.value);
+                  setCanchaSeleccionada(null);
+                  setSubcanchaSeleccionada(null);
+                }}
               />
             </div>
 
@@ -247,7 +294,7 @@ export default function Estudiante() {
                 <div
                   key={cancha.id}
                   className={`est-cancha-card ${canchaSeleccionada?.id === cancha.id ? 'seleccionada' : ''}`}
-                  onClick={() => setCanchaSeleccionada(cancha)}
+                  onClick={() => handleCanchaClick(cancha)}
                 >
                   <div className="est-cancha-img">
                     <span className="est-cancha-emoji">{cancha.emoji}</span>
@@ -276,28 +323,53 @@ export default function Estudiante() {
               ))}
             </div>
 
+            {/* Botones de subcanchas */}
             {canchaSeleccionada && (
-              <div className="est-horarios-card">
-                <h2 className="est-horarios-titulo">
-                  <span>🕐</span> Horarios Disponibles - {canchaSeleccionada.nombre}
-                </h2>
-                <p className="est-horarios-fecha">Fecha seleccionada: {fechaFormateada}</p>
-                <div className="est-horarios-grid">
-                  {(horariosDemo[canchaSeleccionada.id] || []).map((slot) => (
-                    <div
-                      key={slot.hora}
-                      className={`est-slot ${slot.disponible ? 'disponible' : 'ocupado'}`}
+              <div className="est-subcanchas-card">
+                <h2 className="est-subcanchas-titulo">Selecciona la cancha específica</h2>
+                <div className="est-subcanchas-grid">
+                  {canchaSeleccionada.subcanchas.map((sub) => (
+                    <button
+                      key={sub.id}
+                      className={`est-subcancha-btn ${subcanchaSeleccionada?.id === sub.id ? 'activo' : ''}`}
+                      onClick={() => handleSubcanchaClick(sub)}
                     >
-                      <span className="est-slot-icono">
-                        {slot.disponible ? '✅' : '❌'}
-                      </span>
-                      <span className="est-slot-hora">{slot.hora}</span>
-                      <span className="est-slot-estado">
-                        {slot.disponible ? 'Disponible' : 'Ocupado'}
-                      </span>
-                    </div>
+                      {sub.nombre}
+                    </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Horarios de la subcancha seleccionada */}
+            {subcanchaSeleccionada && (
+              <div className="est-horarios-card">
+                <h2 className="est-horarios-titulo">
+                  <span>🕐</span> Horarios Disponibles - {canchaSeleccionada.nombre} · {subcanchaSeleccionada.nombre}
+                </h2>
+                <p className="est-horarios-fecha">Fecha seleccionada: {fechaFormateada}</p>
+
+                {cargandoHorarios ? (
+                  <p className="est-horarios-fecha">Cargando horarios...</p>
+                ) : (
+                  <div className="est-horarios-grid">
+                    {horariosCancha.map((slot) => (
+                      <div
+                        key={slot.horaInicio}
+                        className={`est-slot ${slot.disponible ? 'disponible' : 'ocupado'}`}
+                        onClick={() => handleSlotClick(slot)}
+                      >
+                        <span className="est-slot-icono">
+                          {slot.disponible ? '✅' : '❌'}
+                        </span>
+                        <span className="est-slot-hora">{slot.hora}</span>
+                        <span className="est-slot-estado">
+                          {slot.disponible ? 'Disponible' : 'Ocupado'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -382,6 +454,18 @@ export default function Estudiante() {
 
       {/* Botón ayuda */}
       <button className="est-help-btn">?</button>
+
+      {/* Modal de Permisos */}
+      {mostrarPermisos && (
+        <Permisos
+          cancha={canchaParaReserva}
+          fecha={fecha}
+          fechaFormateada={fechaFormateada}
+          slot={slotSeleccionado}
+          onClose={() => setMostrarPermisos(false)}
+          onReservaCreada={handleReservaCreada}
+        />
+      )}
     </div>
   );
 }

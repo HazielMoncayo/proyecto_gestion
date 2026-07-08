@@ -569,3 +569,49 @@ body {
 .est-help-btn:hover {
   background: #111827;
 }
+
+.est-subcanchas-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.est-subcanchas-titulo {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+}
+
+.est-subcanchas-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.est-subcancha-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.est-subcancha-btn:hover {
+  border-color: #a5b4fc;
+  background: #eef0ff;
+}
+
+.est-subcancha-btn.activo {
+  border-color: #4F46E5;
+  background: #4F46E5;
+  color: #ffffff;
+}
