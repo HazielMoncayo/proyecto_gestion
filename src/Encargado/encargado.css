@@ -370,3 +370,10 @@ body { font-family: 'Segoe UI', sans-serif; }
 }
 
 .enc-help-btn:hover { background: #111827; }
+
+.enc-vacio-texto {
+  text-align: center;
+  padding: 30px;
+  color: #6b7280;
+  font-size: 14px;
+}

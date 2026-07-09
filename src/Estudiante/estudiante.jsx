@@ -3,115 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import './estudiante.css';
 import { supabase } from '../supaBase/supabaseClient';
 import Permisos from '../permisiones/permisiones';
+import { canchasDemo, generarHorasDelDia } from '../data/canchasData';
 
-const canchasDemo = [
-  {
-    id: 'futbol-principal',
-    nombre: 'Cancha de Fútbol Principal',
-    ubicacion: 'Zona Deportiva A',
-    capacidad: 22,
-    tipo: 'Fútbol 11',
-    emoji: '🏟️',
-    subcanchas: [
-      { id: 'fp-1', nombre: 'Cancha 1' },
-      { id: 'fp-2', nombre: 'Cancha 2' },
-      { id: 'fp-3', nombre: 'Cancha 3' },
-    ]
-  },
-  {
-    id: 'futbol-sala',
-    nombre: 'Cancha de Fútbol Sala',
-    ubicacion: 'Zona Deportiva B',
-    capacidad: 14,
-    tipo: 'Fútbol Sala',
-    emoji: '⚽',
-    subcanchas: [
-      { id: 'fs-1', nombre: 'Cancha 1 · La Bombonera' },
-      { id: 'multiuso-basquet-futsal', nombre: 'Cancha 2 · Multiuso' },
-    ]
-  },
-  {
-    id: 'baloncesto',
-    nombre: 'Cancha de Baloncesto',
-    ubicacion: 'Zona Deportiva C',
-    capacidad: 10,
-    tipo: 'Baloncesto',
-    emoji: '🏀',
-    subcanchas: [
-      { id: 'bq-1', nombre: 'Cancha 1' },
-      { id: 'bq-2', nombre: 'Cancha 2' },
-      { id: 'multiuso-basquet-futsal', nombre: 'Cancha 3 · Multiuso' },
-    ]
-  },
-  {
-    id: 'voleibol',
-    nombre: 'Cancha de Voleibol',
-    ubicacion: 'Zona Deportiva D',
-    capacidad: 12,
-    tipo: 'Voleibol',
-    emoji: '🏐',
-    subcanchas: [
-      { id: 'vb-1', nombre: 'Cancha 1' },
-      { id: 'vb-2', nombre: 'Cancha 2' },
-      { id: 'vb-3', nombre: 'Cancha 3' },
-    ]
-  },
-];
-
-// Genera las horas del día, de 08:00 a 20:00, en formato "08:00 - 09:00"
-const generarHorasDelDia = () => {
-  const horas = [];
-  for (let h = 8; h <= 20; h++) {
-    const inicio = `${h.toString().padStart(2, '0')}:00`;
-    const fin = `${(h + 1).toString().padStart(2, '0')}:00`;
-    horas.push({ inicio, fin, label: `${inicio} - ${fin}` });
-  }
-  return horas;
-};
-
-const reservasDemoData = [
-  {
-    id: '1',
-    canchaNombre: 'Cancha de Fútbol Principal',
-    fecha: '2026-12-15',
-    hora: '15:00',
-    ubicacion: 'Zona Deportiva A',
-    tipo: 'Fútbol 11',
-    estado: 'confirmada'
-  },
-  {
-    id: '2',
-    canchaNombre: 'Cancha de Baloncesto',
-    fecha: '2026-12-16',
-    hora: '10:00',
-    ubicacion: 'Zona Deportiva C',
-    tipo: 'Baloncesto',
-    estado: 'confirmada'
-  },
-  {
-    id: '3',
-    canchaNombre: 'Cancha de Fútbol Sala',
-    fecha: '2026-12-18',
-    hora: '18:00',
-    ubicacion: 'Zona Deportiva B',
-    tipo: 'Fútbol Sala',
-    estado: 'pendiente'
-  }
-];
-
-const tabs = ['Canchas Disponibles', 'Mis Reservas', 'Análisis de Uso'];
-const tabIcons = ['📅', '🕐', '📈'];
+const tabs = ['Canchas Disponibles', 'Mis Reservas'];
+const tabIcons = ['📅', '🕐'];
 
 export default function Estudiante() {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
   const [tabActivo, setTabActivo] = useState(0);
-  const [fecha, setFecha] = useState(today);
+  const fecha = today;
   const [canchaSeleccionada, setCanchaSeleccionada] = useState(null);
   const [subcanchaSeleccionada, setSubcanchaSeleccionada] = useState(null);
-  const [reservas, setReservas] = useState(reservasDemoData);
+  const [horaFiltro, setHoraFiltro] = useState('ninguno');
+  const [reservas, setReservas] = useState([]);
+  const [cargandoReservas, setCargandoReservas] = useState(false);
   const [filtro, setFiltro] = useState('todas');
   const [nombreUsuario, setNombreUsuario] = useState('');
+  const [usuarioActual, setUsuarioActual] = useState(null);
   const [mostrarPermisos, setMostrarPermisos] = useState(false);
   const [slotSeleccionado, setSlotSeleccionado] = useState(null);
   const [horariosCancha, setHorariosCancha] = useState([]);
@@ -122,6 +31,7 @@ export default function Estudiante() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setNombreUsuario(user.user_metadata?.nombre || '');
+        setUsuarioActual(user);
       }
     }
     obtenerUsuario();
@@ -167,19 +77,80 @@ export default function Estudiante() {
     cargarHorarios();
   }, [subcanchaSeleccionada, fecha]);
 
+  // Trae las reservas reales del usuario logueado desde Supabase
+  const cargarMisReservas = async () => {
+    if (!usuarioActual) return;
+
+    setCargandoReservas(true);
+
+    const { data, error } = await supabase
+      .from('reservas')
+      .select('*')
+      .eq('usuario_id', usuarioActual.id)
+      .neq('estado', 'cancelada')
+      .order('fecha', { ascending: true })
+      .order('hora_inicio', { ascending: true });
+
+    if (error) {
+      console.error('Error al cargar mis reservas:', error);
+      setCargandoReservas(false);
+      return;
+    }
+
+    const { buscarInfoSubcancha } = await import('../data/canchasData');
+
+    const reservasConNombre = data.map((r) => {
+      const info = buscarInfoSubcancha(r.cancha_id);
+      return {
+        id: r.id,
+        canchaNombre: info
+          ? `${info.canchaPrincipal.nombre} · ${info.subcancha.nombre}`
+          : r.cancha_id,
+        ubicacion: info ? info.canchaPrincipal.ubicacion : '',
+        fecha: r.fecha,
+        horaInicio: r.hora_inicio,
+        horaFin: r.hora_fin,
+        estado: r.estado
+      };
+    });
+
+    setReservas(reservasConNombre);
+    setCargandoReservas(false);
+  };
+
+  useEffect(() => {
+    if (tabActivo === 1 && usuarioActual) {
+      cargarMisReservas();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabActivo, usuarioActual]);
+
   const handleCanchaClick = (cancha) => {
     setCanchaSeleccionada(cancha);
     setSubcanchaSeleccionada(cancha.subcanchas[0]);
+    setHoraFiltro('ninguno');
   };
 
   const handleSubcanchaClick = (subcancha) => {
     setSubcanchaSeleccionada(subcancha);
+    setHoraFiltro('ninguno');
   };
 
-  const handleCancelar = (id) => {
-    if (window.confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
-      setReservas(reservas.filter(r => r.id !== id));
+  const handleCancelar = async (id) => {
+    if (!window.confirm('¿Estás seguro de que deseas cancelar esta reserva?')) return;
+
+    const { error } = await supabase
+      .from('reservas')
+      .update({ estado: 'cancelada' })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al cancelar:', error);
+      alert('No se pudo cancelar la reserva. Intenta de nuevo.');
+      return;
     }
+
+    setReservas(reservas.filter(r => r.id !== id));
   };
 
   const handleSlotClick = (slot) => {
@@ -207,9 +178,16 @@ export default function Estudiante() {
   const canchaParaReserva = canchaSeleccionada && subcanchaSeleccionada
     ? {
         id: subcanchaSeleccionada.id,
-        nombre: `${canchaSeleccionada.nombre} · ${subcanchaSeleccionada.nombre}`
+        nombre: `${canchaSeleccionada.nombre} · ${subcanchaSeleccionada.nombre}`,
+        categoria: canchaSeleccionada.categoria
       }
     : null;
+
+  const horasDisponiblesParaFiltro = generarHorasDelDia();
+
+  const horariosMostrados = horaFiltro === 'ninguno'
+    ? horariosCancha
+    : horariosCancha.filter(h => h.horaInicio === horaFiltro);
 
   return (
     <div className="est-app">
@@ -275,20 +253,6 @@ export default function Estudiante() {
         {/* Tab: Canchas Disponibles */}
         {tabActivo === 0 && (
           <div>
-            <div className="est-fecha-card">
-              <label className="est-fecha-label">Selecciona la fecha</label>
-              <input
-                type="date"
-                className="est-fecha-input"
-                value={fecha}
-                onChange={(e) => {
-                  setFecha(e.target.value);
-                  setCanchaSeleccionada(null);
-                  setSubcanchaSeleccionada(null);
-                }}
-              />
-            </div>
-
             <div className="est-canchas-grid">
               {canchasDemo.map((cancha) => (
                 <div
@@ -344,16 +308,34 @@ export default function Estudiante() {
             {/* Horarios de la subcancha seleccionada */}
             {subcanchaSeleccionada && (
               <div className="est-horarios-card">
-                <h2 className="est-horarios-titulo">
-                  <span>🕐</span> Horarios Disponibles - {canchaSeleccionada.nombre} · {subcanchaSeleccionada.nombre}
-                </h2>
-                <p className="est-horarios-fecha">Fecha seleccionada: {fechaFormateada}</p>
+                <div className="est-horarios-header-row">
+                  <div>
+                    <h2 className="est-horarios-titulo">
+                      <span>🕐</span> Horarios Disponibles - {canchaSeleccionada.nombre} · {subcanchaSeleccionada.nombre}
+                    </h2>
+                    <p className="est-horarios-fecha">Fecha seleccionada: {fechaFormateada}</p>
+                  </div>
+
+                  <div className="est-hora-filtro">
+                    <label className="est-hora-filtro-label">Filtrar por hora</label>
+                    <select
+                      className="est-hora-filtro-select"
+                      value={horaFiltro}
+                      onChange={(e) => setHoraFiltro(e.target.value)}
+                    >
+                      <option value="ninguno">Ninguno</option>
+                      {horasDisponiblesParaFiltro.map((h) => (
+                        <option key={h.inicio} value={h.inicio}>{h.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
                 {cargandoHorarios ? (
                   <p className="est-horarios-fecha">Cargando horarios...</p>
                 ) : (
                   <div className="est-horarios-grid">
-                    {horariosCancha.map((slot) => (
+                    {horariosMostrados.map((slot) => (
                       <div
                         key={slot.horaInicio}
                         className={`est-slot ${slot.disponible ? 'disponible' : 'ocupado'}`}
@@ -410,7 +392,11 @@ export default function Estudiante() {
             </div>
 
             <div className="est-lista">
-              {reservasFiltradas.length === 0 ? (
+              {cargandoReservas ? (
+                <div className="est-vacio">
+                  <p className="est-vacio-texto">Cargando tus reservas...</p>
+                </div>
+              ) : reservasFiltradas.length === 0 ? (
                 <div className="est-vacio">
                   <p className="est-vacio-icono">📅</p>
                   <p className="est-vacio-texto">No tienes reservas en este momento.</p>
@@ -429,7 +415,7 @@ export default function Estudiante() {
                         <p>📅 {new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES', {
                           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                         })}</p>
-                        <p>🕐 {r.hora} - {parseInt(r.hora.split(':')[0]) + 1}:00</p>
+                        <p>🕐 {r.horaInicio} - {r.horaFin}</p>
                         <p>📍 {r.ubicacion}</p>
                       </div>
                     </div>
@@ -440,14 +426,6 @@ export default function Estudiante() {
                 ))
               )}
             </div>
-          </div>
-        )}
-
-        {/* Tab: Análisis de Uso */}
-        {tabActivo === 2 && (
-          <div className="est-vacio">
-            <p className="est-vacio-icono">📈</p>
-            <p className="est-vacio-texto">Análisis de uso próximamente disponible.</p>
           </div>
         )}
       </main>

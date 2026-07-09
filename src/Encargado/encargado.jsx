@@ -2,32 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './encargado.css';
 import { supabase } from '../supaBase/supabaseClient';
-
-const reservasDemo = [
-  { id: '1', estudiante: 'Juan Pérez',    cancha: 'Fútbol Principal', fecha: '14/5/2026', hora: '15:00', estado: 'pendiente' },
-  { id: '2', estudiante: 'Ana Martínez',  cancha: 'Baloncesto',       fecha: '14/5/2026', hora: '16:00', estado: 'confirmada' },
-  { id: '3', estudiante: 'Carlos López',  cancha: 'Fútbol Rápido',    fecha: '15/5/2026', hora: '10:00', estado: 'pendiente' },
-  { id: '4', estudiante: 'María García',  cancha: 'Voleibol',         fecha: '15/5/2026', hora: '09:00', estado: 'confirmada' },
-];
-
-const inventarioDemo = [
-  { id: '1', nombre: 'Balones de Fútbol',     stock: 5,  minimo: 10, categoria: 'Equipamiento' },
-  { id: '2', nombre: 'Chalecos Deportivos',   stock: 3,  minimo: 8,  categoria: 'Indumentaria' },
-  { id: '3', nombre: 'Conos de Entrenamiento',stock: 2,  minimo: 15, categoria: 'Equipamiento' },
-  { id: '4', nombre: 'Balones de Baloncesto', stock: 12, minimo: 6,  categoria: 'Equipamiento' },
-  { id: '5', nombre: 'Redes de Voleibol',     stock: 4,  minimo: 3,  categoria: 'Infraestructura' },
-  { id: '6', nombre: 'Cronómetros',           stock: 32, minimo: 5,  categoria: 'Tecnología' },
-];
+import { buscarInfoSubcancha, IMPLEMENTOS_POR_CATEGORIA } from '../data/canchasData';
 
 const tabs = ['Gestión de Reservas', 'Inventario', 'Control de Horarios'];
 const tabIcons = ['📅', '📦', '🕐'];
 
 export default function Encargado() {
   const navigate = useNavigate();
+  const today = new Date().toISOString().split('T')[0];
   const [tabActivo, setTabActivo] = useState(0);
-  const [reservas, setReservas] = useState(reservasDemo);
-  const [inventario] = useState(inventarioDemo);
+  const [reservas, setReservas] = useState([]);
+  const [inventario, setInventario] = useState([]);
   const [nombreUsuario, setNombreUsuario] = useState('');
+  const [cargando, setCargando] = useState(false);
 
   useEffect(() => {
     async function obtenerUsuario() {
@@ -39,19 +26,108 @@ export default function Encargado() {
     obtenerUsuario();
   }, []);
 
+  const cargarReservas = async () => {
+    setCargando(true);
+    const { data, error } = await supabase
+      .from('reservas')
+      .select('*')
+      .neq('estado', 'cancelada')
+      .order('fecha', { ascending: true })
+      .order('hora_inicio', { ascending: true });
+
+    if (error) {
+      console.error('Error al cargar reservas:', error);
+      setCargando(false);
+      return;
+    }
+
+    const conNombre = data.map((r) => {
+      const info = buscarInfoSubcancha(r.cancha_id);
+      return {
+        id: r.id,
+        estudiante: r.estudiante_nombre || r.estudiante_email || 'Estudiante',
+        cancha: info
+          ? `${info.canchaPrincipal.nombre} · ${info.subcancha.nombre}`
+          : r.cancha_id,
+        fecha: r.fecha,
+        fechaLabel: new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES'),
+        hora: `${r.hora_inicio} - ${r.hora_fin}`,
+        estado: r.estado,
+        categoria: r.categoria,
+        deseaImplementos: r.desea_implementos
+      };
+    });
+
+    setReservas(conNombre);
+    setCargando(false);
+  };
+
+  const cargarInventario = async () => {
+    const { data, error } = await supabase
+      .from('inventario')
+      .select('*')
+      .order('nombre', { ascending: true });
+
+    if (error) {
+      console.error('Error al cargar inventario:', error);
+      return;
+    }
+
+    setInventario(data);
+  };
+
+  useEffect(() => {
+    cargarReservas();
+    cargarInventario();
+  }, []);
+
   const pendientes = reservas.filter(r => r.estado === 'pendiente');
-  const confirmadas = reservas.filter(r => r.estado === 'confirmada');
+  const confirmadasHoy = reservas.filter(r => r.estado === 'confirmada' && r.fecha === today);
   const bajosStock = inventario.filter(i => i.stock < i.minimo);
   const totalInventario = inventario.reduce((sum, i) => sum + i.stock, 0);
 
-  const handleAprobar = (id) => {
-    setReservas(reservas.map(r => r.id === id ? { ...r, estado: 'confirmada' } : r));
+  const handleAprobar = async (id) => {
+    const { error } = await supabase
+      .from('reservas')
+      .update({ estado: 'confirmada' })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al aprobar:', error);
+      alert('No se pudo aprobar la reserva.');
+      return;
+    }
+
+    cargarReservas();
   };
 
-  const handleRechazar = (id) => {
-    if (window.confirm('¿Rechazar esta reserva?')) {
-      setReservas(reservas.filter(r => r.id !== id));
+  const handleRechazar = async (reserva) => {
+    if (!window.confirm('¿Rechazar esta reserva?')) return;
+
+    const { error } = await supabase
+      .from('reservas')
+      .update({ estado: 'cancelada' })
+      .eq('id', reserva.id);
+
+    if (error) {
+      console.error('Error al rechazar:', error);
+      alert('No se pudo rechazar la reserva.');
+      return;
     }
+
+    // Si el estudiante había pedido implementos, se devuelven al inventario
+    if (reserva.deseaImplementos && reserva.categoria) {
+      const items = IMPLEMENTOS_POR_CATEGORIA[reserva.categoria] || [];
+      for (const item of items) {
+        await supabase.rpc('incrementar_stock', {
+          p_item_key: item.item_key,
+          p_cantidad: item.cantidad
+        });
+      }
+      cargarInventario();
+    }
+
+    cargarReservas();
   };
 
   return (
@@ -126,7 +202,7 @@ export default function Encargado() {
         <div className="enc-stats">
           {[
             { label: 'Reservas Pendientes', valor: pendientes.length,      color: 'naranja',  icon: '🕐' },
-            { label: 'Confirmadas Hoy',     valor: confirmadas.length,     color: 'verde',    icon: '✅' },
+            { label: 'Confirmadas Hoy',     valor: confirmadasHoy.length,  color: 'verde',    icon: '✅' },
             { label: 'Items Bajo Stock',    valor: bajosStock.length,      color: 'rojo',     icon: '⚠️' },
             { label: 'Inventario Total',    valor: totalInventario,        color: 'azul',     icon: '📦' },
           ].map((s) => (
@@ -145,63 +221,75 @@ export default function Encargado() {
           <div>
             <h2 className="enc-seccion-titulo">Gestión de Reservas</h2>
 
-            {pendientes.length > 0 && (
+            {cargando ? (
+              <p className="enc-vacio-texto">Cargando reservas...</p>
+            ) : (
               <>
-                <h3 className="enc-subseccion-titulo">Pendientes de Aprobación ({pendientes.length})</h3>
-                <div className="enc-pendientes-lista">
-                  {pendientes.map((r) => (
-                    <div key={r.id} className="enc-pendiente-card">
-                      <div className="enc-pendiente-info">
-                        <p className="enc-pendiente-cancha">{r.cancha}</p>
-                        <div className="enc-pendiente-detalles">
-                          <span>Estudiante: {r.estudiante}</span>
-                          <span>Fecha: {r.fecha}</span>
-                          <span>Hora: {r.hora}</span>
+                {pendientes.length > 0 && (
+                  <>
+                    <h3 className="enc-subseccion-titulo">Pendientes de Aprobación ({pendientes.length})</h3>
+                    <div className="enc-pendientes-lista">
+                      {pendientes.map((r) => (
+                        <div key={r.id} className="enc-pendiente-card">
+                          <div className="enc-pendiente-info">
+                            <p className="enc-pendiente-cancha">{r.cancha}</p>
+                            <div className="enc-pendiente-detalles">
+                              <span>Estudiante: {r.estudiante}</span>
+                              <span>Fecha: {r.fechaLabel}</span>
+                              <span>Hora: {r.hora}</span>
+                            </div>
+                          </div>
+                          <div className="enc-pendiente-acciones">
+                            <button className="enc-btn-aprobar" onClick={() => handleAprobar(r.id)}>
+                              ✅ Aprobar
+                            </button>
+                            <button className="enc-btn-rechazar" onClick={() => handleRechazar(r)}>
+                              ❌ Rechazar
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="enc-pendiente-acciones">
-                        <button className="enc-btn-aprobar" onClick={() => handleAprobar(r.id)}>
-                          ✅ Aprobar
-                        </button>
-                        <button className="enc-btn-rechazar" onClick={() => handleRechazar(r.id)}>
-                          ❌ Rechazar
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </>
+                )}
+
+                <h3 className="enc-subseccion-titulo">Todas las Reservas</h3>
+                <div className="enc-tabla-wrapper">
+                  <table className="enc-tabla">
+                    <thead>
+                      <tr>
+                        <th>ESTUDIANTE</th>
+                        <th>CANCHA</th>
+                        <th>FECHA</th>
+                        <th>HORA</th>
+                        <th>ESTADO</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reservas.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="enc-vacio-texto">No hay reservas registradas.</td>
+                        </tr>
+                      ) : (
+                        reservas.map((r) => (
+                          <tr key={r.id}>
+                            <td className="enc-tabla-bold">{r.estudiante}</td>
+                            <td>{r.cancha}</td>
+                            <td>{r.fechaLabel}</td>
+                            <td>{r.hora}</td>
+                            <td>
+                              <span className={`enc-badge ${r.estado === 'confirmada' ? 'badge-verde' : 'badge-amarillo'}`}>
+                                {r.estado === 'confirmada' ? 'Confirmada' : 'Pendiente'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </>
             )}
-
-            <h3 className="enc-subseccion-titulo">Todas las Reservas</h3>
-            <div className="enc-tabla-wrapper">
-              <table className="enc-tabla">
-                <thead>
-                  <tr>
-                    <th>ESTUDIANTE</th>
-                    <th>CANCHA</th>
-                    <th>FECHA</th>
-                    <th>HORA</th>
-                    <th>ESTADO</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reservas.map((r) => (
-                    <tr key={r.id}>
-                      <td className="enc-tabla-bold">{r.estudiante}</td>
-                      <td>{r.cancha}</td>
-                      <td>{r.fecha}</td>
-                      <td>{r.hora}</td>
-                      <td>
-                        <span className={`enc-badge ${r.estado === 'confirmada' ? 'badge-verde' : 'badge-amarillo'}`}>
-                          {r.estado === 'confirmada' ? 'Confirmada' : 'Pendiente'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         )}
 
@@ -256,17 +344,23 @@ export default function Encargado() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reservas.filter(r => r.estado === 'confirmada').map((r) => (
-                    <tr key={r.id}>
-                      <td className="enc-tabla-bold">{r.estudiante}</td>
-                      <td>{r.cancha}</td>
-                      <td>{r.fecha}</td>
-                      <td>{r.hora}</td>
-                      <td>
-                        <span className="enc-badge badge-verde">Confirmada</span>
-                      </td>
+                  {reservas.filter(r => r.estado === 'confirmada').length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="enc-vacio-texto">No hay reservas confirmadas.</td>
                     </tr>
-                  ))}
+                  ) : (
+                    reservas.filter(r => r.estado === 'confirmada').map((r) => (
+                      <tr key={r.id}>
+                        <td className="enc-tabla-bold">{r.estudiante}</td>
+                        <td>{r.cancha}</td>
+                        <td>{r.fechaLabel}</td>
+                        <td>{r.hora}</td>
+                        <td>
+                          <span className="enc-badge badge-verde">Confirmada</span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

@@ -615,3 +615,40 @@ body {
   background: #4F46E5;
   color: #ffffff;
 }
+
+.est-horarios-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.est-hora-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.est-hora-filtro-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.est-hora-filtro-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.est-hora-filtro-select:focus {
+  outline: none;
+  border-color: #4F46E5;
+}

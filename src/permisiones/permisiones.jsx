@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../supaBase/supabaseClient';
+import { IMPLEMENTOS_POR_CATEGORIA } from '../data/canchasData';
 import './permisiones.css';
 
 export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose, onReservaCreada }) {
@@ -30,6 +31,17 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
     return ruta;
   };
 
+  const descontarImplementos = async (categoria) => {
+    const items = IMPLEMENTOS_POR_CATEGORIA[categoria] || [];
+    for (const item of items) {
+      const { error } = await supabase.rpc('decrementar_stock', {
+        p_item_key: item.item_key,
+        p_cantidad: item.cantidad
+      });
+      if (error) console.error(`Error al descontar ${item.item_key}:`, error);
+    }
+  };
+
   const handleAceptar = async () => {
     if (!carnet || !cedulaFrente || !cedulaAtras) {
       setError('Debes subir el carnet y ambos lados de la cédula.');
@@ -54,10 +66,13 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
 
       const { error: insertError } = await supabase.from('reservas').insert({
         cancha_id: cancha.id,
+        categoria: cancha.categoria,
         fecha: fecha,
         hora_inicio: slot.horaInicio,
         hora_fin: slot.horaFin,
         usuario_id: user.id,
+        estudiante_nombre: user.user_metadata?.nombre || '',
+        estudiante_email: user.email,
         estado: 'pendiente',
         desea_implementos: deseaCosas,
         carnet_url: carnetPath,
@@ -66,6 +81,10 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
       });
 
       if (insertError) throw insertError;
+
+      if (deseaCosas) {
+        await descontarImplementos(cancha.categoria);
+      }
 
       alert('Tu solicitud fue enviada correctamente.');
       onReservaCreada ? onReservaCreada() : onClose();
@@ -145,7 +164,7 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
             onChange={(e) => setDeseaCosas(e.target.checked)}
             className="perm-checkbox"
           />
-          <span>¿Deseas que te prestemos los implementos? (red y pelota)</span>
+          <span>¿Deseas que te prestemos los implementos?</span>
         </label>
 
         {error && <p className="perm-error">{error}</p>}
