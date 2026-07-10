@@ -1,70 +1,78 @@
-# Getting Started with Create React App
+# Gestión Buho Gear
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de gestión de proyectos de software desarrollado como proyecto académico. Construido con **React + Vite**, **Tailwind CSS** y **Supabase** como backend.
 
-## Available Scripts
+## Stack tecnológico
 
-In the project directory, you can run:
+- **React 19** — librería de UI
+- **Vite** — bundler y servidor de desarrollo
+- **React Router DOM** — enrutamiento de la aplicación
+- **Tailwind CSS** — estilos
+- **Supabase** — base de datos y autenticación
+- **Lucide React** — iconografía
 
-### `npm start`
+> Este proyecto fue migrado de Create React App (CRA) a Vite para usar tecnología activamente mantenida, con tiempos de arranque y recarga significativamente más rápidos.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Requisitos previos
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Node.js 18 o superior
+- npm
 
-### `npm test`
+## Instalación
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
+
+## Variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
+```dotenv
+VITE_SUPABASE_URL=tu_url_de_supabase
+VITE_SUPABASE_ANON_KEY=tu_anon_key_de_supabase
+```
+
+> Importante: en Vite, todas las variables de entorno expuestas al frontend deben empezar con el prefijo `VITE_`.
+
+## Scripts disponibles
+
+En el directorio del proyecto puedes correr:
+
+### `npm run dev`
+
+Levanta el servidor de desarrollo con recarga en caliente (HMR).\
+Abre [http://localhost:3000](http://localhost:3000) para verlo en el navegador.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Genera la build de producción optimizada en la carpeta `dist`.\
+El código queda minificado y listo para desplegar.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### `npm run preview`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Sirve localmente la build de producción generada por `npm run build`, útil para verificar que todo funcione antes de desplegar.
 
-### `npm run eject`
+## Estructura del proyecto
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```
+src/
+├── Encargado/       # Módulo de encargado
+├── Estudiante/       # Módulo de estudiante
+├── Inicio/            # Página de inicio
+├── permisiones/      # Manejo de permisos
+├── sign-up/           # Registro de usuarios
+├── supaBase/          # Cliente y configuración de Supabase
+└── index.jsx           # Punto de entrada de la aplicación
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Despliegue
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Al ejecutar `npm run build`, el contenido optimizado se genera en la carpeta `dist/`. Esa carpeta es la que debe subirse al servicio de hosting elegido (Vercel, Netlify, GitHub Pages, etc.).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Aprender más
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Documentación de Vite](https://vite.dev)
+- [Documentación de React](https://react.dev)
+- [Documentación de Tailwind CSS](https://tailwindcss.com/docs)
+- [Documentación de Supabase](https://supabase.com/docs)

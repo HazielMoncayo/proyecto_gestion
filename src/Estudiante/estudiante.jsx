@@ -1,12 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './estudiante.css';
 import { supabase } from '../supaBase/supabaseClient';
 import Permisos from '../permisiones/permisiones';
 import { canchasDemo, generarHorasDelDia } from '../data/canchasData';
 
 const tabs = ['Canchas Disponibles', 'Mis Reservas'];
 const tabIcons = ['📅', '🕐'];
+
+const statStyle = {
+  azul:     { numero: 'text-blue-800', icono: 'bg-blue-100' },
+  verde:    { numero: 'text-emerald-600', icono: 'bg-emerald-100' },
+  amarillo: { numero: 'text-amber-500', icono: 'bg-amber-100' },
+};
+
+const filtroActivoClase = {
+  todas: 'bg-gradient-to-r from-blue-800 to-blue-900 text-white shadow-md shadow-blue-900/30',
+  confirmada: 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/30',
+  pendiente: 'bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md shadow-amber-500/30',
+};
 
 export default function Estudiante() {
   const navigate = useNavigate();
@@ -37,7 +48,6 @@ export default function Estudiante() {
     obtenerUsuario();
   }, []);
 
-  // Trae las horas ocupadas desde Supabase para la SUBCANCHA seleccionada
   useEffect(() => {
     if (!subcanchaSeleccionada) {
       setHorariosCancha([]);
@@ -77,7 +87,6 @@ export default function Estudiante() {
     cargarHorarios();
   }, [subcanchaSeleccionada, fecha]);
 
-  // Trae las reservas reales del usuario logueado desde Supabase
   const cargarMisReservas = async () => {
     if (!usuarioActual) return;
 
@@ -160,10 +169,9 @@ export default function Estudiante() {
     }
   };
 
-  // Se llama cuando Permisos.jsx confirma la reserva, para refrescar la grilla
   const handleReservaCreada = () => {
     setMostrarPermisos(false);
-    setSubcanchaSeleccionada({ ...subcanchaSeleccionada }); // fuerza recarga del useEffect
+    setSubcanchaSeleccionada({ ...subcanchaSeleccionada });
   };
 
   const reservasFiltradas = filtro === 'todas'
@@ -174,7 +182,6 @@ export default function Estudiante() {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
-  // Objeto combinado que se le pasa al modal de reserva (identifica la subcancha exacta)
   const canchaParaReserva = canchaSeleccionada && subcanchaSeleccionada
     ? {
         id: subcanchaSeleccionada.id,
@@ -190,40 +197,45 @@ export default function Estudiante() {
     : horariosCancha.filter(h => h.horaInicio === horaFiltro);
 
   return (
-    <div className="est-app">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50/50">
 
       {/* Header */}
-      <header className="est-header">
-        <div className="est-header-logo">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <polyline
-              points="2,14 8,6 14,20 20,10 26,14"
-              stroke="#4F46E5"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </svg>
-          <div>
-            <span className="est-header-nombre">Buho-Gear</span>
-            <span className="est-header-sub">Sistema de Reservas Deportivas</span>
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-white/90 backdrop-blur border-b border-blue-100 px-6 py-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-900 shadow-lg shadow-blue-900/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+              <polyline
+                points="2,14 8,6 14,20 20,10 26,14"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="font-extrabold text-lg text-slate-900 tracking-tight">Buho-Gear</span>
+            <span className="text-xs text-slate-500">Sistema de Reservas Deportivas</span>
           </div>
         </div>
 
-        <div className="est-header-usuario">
-          <div className="est-header-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <div className="est-header-info">
-            <span className="est-header-nombre-user">{nombreUsuario}</span>
-            <span className="est-header-carrera">Ingeniería de Sistemas</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-medium text-slate-700">{nombreUsuario}</span>
+            <span className="text-xs text-slate-500">Ingeniería de Sistemas</span>
           </div>
-          <span className="est-badge-rol">Estudiante</span>
-          <button className="est-btn-salir" onClick={() => navigate('/sign-up')}>
+          <span className="text-xs font-semibold bg-gradient-to-r from-blue-700 to-blue-900 text-white px-3 py-1 rounded-full shadow-sm">Estudiante</span>
+          <button
+            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 px-3 py-1.5 rounded-xl transition-colors"
+            onClick={() => navigate('/')}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
@@ -235,91 +247,114 @@ export default function Estudiante() {
       </header>
 
       {/* Tabs */}
-      <nav className="est-tabs">
-        {tabs.map((tab, i) => (
-          <button
-            key={tab}
-            className={`est-tab ${tabActivo === i ? 'activo' : ''}`}
-            onClick={() => setTabActivo(i)}
-          >
-            <span>{tabIcons[i]}</span> {tab}
-          </button>
-        ))}
-      </nav>
+      <div className="px-6 pt-4">
+        <nav className="inline-flex gap-1 bg-white rounded-2xl p-1.5 shadow-sm border border-slate-100">
+          {tabs.map((tab, i) => {
+            const activo = tabActivo === i;
+            return (
+              <button
+                key={tab}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activo
+                    ? 'bg-gradient-to-r from-blue-800 to-blue-900 text-white shadow-md shadow-blue-900/30'
+                    : 'text-slate-500 hover:bg-slate-50'
+                }`}
+                onClick={() => setTabActivo(i)}
+              >
+                <span>{tabIcons[i]}</span> {tab}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Contenido */}
-      <main className="est-main">
+      <main className="max-w-7xl mx-auto px-6 py-6">
 
         {/* Tab: Canchas Disponibles */}
         {tabActivo === 0 && (
           <div>
-            <div className="est-canchas-grid">
-              {canchasDemo.map((cancha) => (
-                <div
-                  key={cancha.id}
-                  className={`est-cancha-card ${canchaSeleccionada?.id === cancha.id ? 'seleccionada' : ''}`}
-                  onClick={() => handleCanchaClick(cancha)}
-                >
-                  <div className="est-cancha-img">
-                    <span className="est-cancha-emoji">{cancha.emoji}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {canchasDemo.map((cancha) => {
+                const seleccionada = canchaSeleccionada?.id === cancha.id;
+                return (
+                  <div
+                    key={cancha.id}
+                    className={`bg-white rounded-2xl border shadow-sm hover:shadow-lg hover:-translate-y-0.5 overflow-hidden cursor-pointer transition-all ${
+                      seleccionada ? 'border-blue-800 ring-2 ring-blue-200' : 'border-slate-100'
+                    }`}
+                    onClick={() => handleCanchaClick(cancha)}
+                  >
+                    <div className="h-28 bg-gradient-to-br from-blue-100 via-blue-50 to-slate-50 flex items-center justify-center">
+                      <span className="text-5xl drop-shadow-sm">{cancha.emoji}</span>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-slate-900 mb-1">{cancha.nombre}</h3>
+                      <p className="flex items-center gap-1.5 text-xs text-slate-500 mb-1">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        {cancha.ubicacion}
+                      </p>
+                      <p className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Capacidad: {cancha.capacidad} personas
+                      </p>
+                      <span className="inline-block text-xs font-semibold bg-gradient-to-r from-blue-700 to-blue-900 text-white px-3 py-1 rounded-full">
+                        {cancha.tipo}
+                      </span>
+                    </div>
                   </div>
-                  <div className="est-cancha-body">
-                    <h3 className="est-cancha-nombre">{cancha.nombre}</h3>
-                    <p className="est-cancha-detalle">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                      </svg>
-                      {cancha.ubicacion}
-                    </p>
-                    <p className="est-cancha-detalle">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                      </svg>
-                      Capacidad: {cancha.capacidad} personas
-                    </p>
-                    <span className="est-cancha-tipo">{cancha.tipo}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Botones de subcanchas */}
             {canchaSeleccionada && (
-              <div className="est-subcanchas-card">
-                <h2 className="est-subcanchas-titulo">Selecciona la cancha específica</h2>
-                <div className="est-subcanchas-grid">
-                  {canchaSeleccionada.subcanchas.map((sub) => (
-                    <button
-                      key={sub.id}
-                      className={`est-subcancha-btn ${subcanchaSeleccionada?.id === sub.id ? 'activo' : ''}`}
-                      onClick={() => handleSubcanchaClick(sub)}
-                    >
-                      {sub.nombre}
-                    </button>
-                  ))}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mt-6">
+                <h2 className="text-sm font-semibold text-slate-700 mb-3">Selecciona la cancha específica</h2>
+                <div className="flex flex-wrap gap-2">
+                  {canchaSeleccionada.subcanchas.map((sub) => {
+                    const activo = subcanchaSeleccionada?.id === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        className={`text-sm font-medium px-4 py-2 rounded-full transition-all ${
+                          activo
+                            ? 'bg-gradient-to-r from-blue-800 to-blue-900 text-white shadow-md shadow-blue-900/30'
+                            : 'bg-slate-50 text-slate-600 hover:bg-blue-50'
+                        }`}
+                        onClick={() => handleSubcanchaClick(sub)}
+                      >
+                        {sub.nombre}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {/* Horarios de la subcancha seleccionada */}
             {subcanchaSeleccionada && (
-              <div className="est-horarios-card">
-                <div className="est-horarios-header-row">
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   <div>
-                    <h2 className="est-horarios-titulo">
+                    <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 tracking-tight">
                       <span>🕐</span> Horarios Disponibles - {canchaSeleccionada.nombre} · {subcanchaSeleccionada.nombre}
                     </h2>
-                    <p className="est-horarios-fecha">Fecha seleccionada: {fechaFormateada}</p>
+                    <p className="text-xs text-slate-500 mt-1">Fecha seleccionada: {fechaFormateada}</p>
                   </div>
 
-                  <div className="est-hora-filtro">
-                    <label className="est-hora-filtro-label">Filtrar por hora</label>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-slate-500">Filtrar por hora</label>
                     <select
-                      className="est-hora-filtro-select"
+                      className="text-sm border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500"
                       value={horaFiltro}
                       onChange={(e) => setHoraFiltro(e.target.value)}
                     >
@@ -332,20 +367,24 @@ export default function Estudiante() {
                 </div>
 
                 {cargandoHorarios ? (
-                  <p className="est-horarios-fecha">Cargando horarios...</p>
+                  <p className="text-sm text-slate-500">Cargando horarios...</p>
                 ) : (
-                  <div className="est-horarios-grid">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {horariosMostrados.map((slot) => (
                       <div
                         key={slot.horaInicio}
-                        className={`est-slot ${slot.disponible ? 'disponible' : 'ocupado'}`}
+                        className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-all ${
+                          slot.disponible
+                            ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-700 cursor-pointer hover:shadow-md hover:-translate-y-0.5'
+                            : 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
+                        }`}
                         onClick={() => handleSlotClick(slot)}
                       >
-                        <span className="est-slot-icono">
+                        <span className="text-lg leading-none">
                           {slot.disponible ? '✅' : '❌'}
                         </span>
-                        <span className="est-slot-hora">{slot.hora}</span>
-                        <span className="est-slot-estado">
+                        <span className="text-sm font-semibold">{slot.hora}</span>
+                        <span className="text-xs">
                           {slot.disponible ? 'Disponible' : 'Ocupado'}
                         </span>
                       </div>
@@ -360,58 +399,65 @@ export default function Estudiante() {
         {/* Tab: Mis Reservas */}
         {tabActivo === 1 && (
           <div>
-            <div className="est-card">
-              <h2 className="est-seccion-titulo">Filtrar por estado</h2>
-              <div className="est-filtros">
-                {['todas', 'confirmada', 'pendiente'].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFiltro(f)}
-                    className={`est-filtro-btn ${filtro === f ? `activo-${f}` : ''}`}
-                  >
-                    {f === 'todas' ? 'Todas' : f === 'confirmada' ? 'Confirmadas' : 'Pendientes'}
-                  </button>
-                ))}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-6">
+              <h2 className="text-sm font-semibold text-slate-700 mb-3">Filtrar por estado</h2>
+              <div className="flex gap-2">
+                {['todas', 'confirmada', 'pendiente'].map((f) => {
+                  const activo = filtro === f;
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setFiltro(f)}
+                      className={`text-sm font-medium px-4 py-2 rounded-full transition-all ${
+                        activo ? filtroActivoClase[f] : 'bg-slate-50 text-slate-600 hover:bg-blue-50'
+                      }`}
+                    >
+                      {f === 'todas' ? 'Todas' : f === 'confirmada' ? 'Confirmadas' : 'Pendientes'}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="est-stats">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {[
                 { label: 'Total Reservas', valor: reservas.length, color: 'azul', icon: '📅' },
                 { label: 'Confirmadas', valor: reservas.filter(r => r.estado === 'confirmada').length, color: 'verde', icon: '✅' },
                 { label: 'Pendientes', valor: reservas.filter(r => r.estado === 'pendiente').length, color: 'amarillo', icon: '🕐' },
               ].map((s) => (
-                <div key={s.label} className="est-stat-card">
+                <div key={s.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-5 flex items-center justify-between">
                   <div>
-                    <p className="est-stat-label">{s.label}</p>
-                    <p className={`est-stat-numero ${s.color}`}>{s.valor}</p>
+                    <p className="text-xs font-medium text-slate-500 mb-1">{s.label}</p>
+                    <p className={`text-3xl font-extrabold ${statStyle[s.color].numero}`}>{s.valor}</p>
                   </div>
-                  <span className="est-stat-icono">{s.icon}</span>
+                  <span className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${statStyle[s.color].icono}`}>{s.icon}</span>
                 </div>
               ))}
             </div>
 
-            <div className="est-lista">
+            <div className="flex flex-col gap-3">
               {cargandoReservas ? (
-                <div className="est-vacio">
-                  <p className="est-vacio-texto">Cargando tus reservas...</p>
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center">
+                  <p className="text-slate-400 text-sm">Cargando tus reservas...</p>
                 </div>
               ) : reservasFiltradas.length === 0 ? (
-                <div className="est-vacio">
-                  <p className="est-vacio-icono">📅</p>
-                  <p className="est-vacio-texto">No tienes reservas en este momento.</p>
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center">
+                  <p className="text-3xl mb-2">📅</p>
+                  <p className="text-slate-400 text-sm">No tienes reservas en este momento.</p>
                 </div>
               ) : (
                 reservasFiltradas.map((r) => (
-                  <div key={r.id} className="est-reserva-card">
-                    <div className="est-reserva-info">
-                      <div className="est-reserva-header">
-                        <h3 className="est-reserva-nombre">{r.canchaNombre}</h3>
-                        <span className={`est-badge ${r.estado === 'confirmada' ? 'badge-verde' : 'badge-amarillo'}`}>
+                  <div key={r.id} className="flex items-center justify-between bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-bold text-slate-900">{r.canchaNombre}</h3>
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                          r.estado === 'confirmada' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
                           {r.estado === 'confirmada' ? 'Confirmada' : 'Pendiente'}
                         </span>
                       </div>
-                      <div className="est-reserva-detalles">
+                      <div className="flex flex-col gap-0.5 text-xs text-slate-500">
                         <p>📅 {new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES', {
                           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                         })}</p>
@@ -419,7 +465,10 @@ export default function Estudiante() {
                         <p>📍 {r.ubicacion}</p>
                       </div>
                     </div>
-                    <button onClick={() => handleCancelar(r.id)} className="est-btn-cancelar">
+                    <button
+                      onClick={() => handleCancelar(r.id)}
+                      className="text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors shrink-0"
+                    >
                       🗑 Cancelar
                     </button>
                   </div>
@@ -431,7 +480,9 @@ export default function Estudiante() {
       </main>
 
       {/* Botón ayuda */}
-      <button className="est-help-btn">?</button>
+      <button className="fixed bottom-6 right-6 w-13 h-13 p-3.5 rounded-full bg-gradient-to-br from-blue-800 to-blue-900 hover:scale-110 text-white text-xl font-bold shadow-lg shadow-blue-900/40 flex items-center justify-center transition-transform">
+        ?
+      </button>
 
       {/* Modal de Permisos */}
       {mostrarPermisos && (
