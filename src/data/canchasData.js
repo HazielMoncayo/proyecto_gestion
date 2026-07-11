@@ -60,9 +60,11 @@ export const canchasDemo = [
 ];
 
 // Genera las horas del día, de 08:00 a 20:00, en formato "08:00 - 09:00"
+// Se excluye el bloque de 13:00 - 14:00 (hora de almuerzo, no se puede reservar en la Poli)
 export const generarHorasDelDia = () => {
   const horas = [];
   for (let h = 8; h <= 20; h++) {
+    if (h === 13) continue;
     const inicio = `${h.toString().padStart(2, '0')}:00`;
     const fin = `${(h + 1).toString().padStart(2, '0')}:00`;
     horas.push({ inicio, fin, label: `${inicio} - ${fin}` });

@@ -5,10 +5,12 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.17.0"
+    "react-router-dom": "^7.17.0",
+    "tesseract.js": "^7.0.0"
   },
   "scripts": {
     "dev": "vite",

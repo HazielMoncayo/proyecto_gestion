@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, CheckCircle2, XCircle, MapPin, Users, LogOut, User, HelpCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../supaBase/supabaseClient';
 import Permisos from '../permisiones/permisiones';
-import { canchasDemo, generarHorasDelDia } from '../data/canchasData';
+import { canchasDemo, generarHorasDelDia, buscarInfoSubcancha } from '../data/canchasData';
 
 const tabs = ['Canchas Disponibles', 'Mis Reservas'];
 const TabIcon = [Calendar, Clock];
@@ -49,6 +49,8 @@ export default function Estudiante() {
     obtenerUsuario();
   }, []);
 
+  // Trae las horas ocupadas desde Supabase para la SUBCANCHA seleccionada
+  // y también calcula cuáles ya "pasaron" según la hora actual del día.
   useEffect(() => {
     if (!subcanchaSeleccionada) {
       setHorariosCancha([]);
@@ -74,12 +76,38 @@ export default function Estudiante() {
       const horasOcupadas = ocupadas.map(r => r.hora_inicio);
       const todasLasHoras = generarHorasDelDia();
 
-      const conEstado = todasLasHoras.map(h => ({
-        horaInicio: h.inicio,
-        horaFin: h.fin,
-        hora: h.label,
-        disponible: !horasOcupadas.includes(h.inicio)
-      }));
+      const conEstado = todasLasHoras.map(h => {
+        const reservado = horasOcupadas.includes(h.inicio);
+
+        return {
+          horaInicio: h.inicio,
+          horaFin: h.fin,
+          hora: h.label,
+          estado: reservado ? 'ocupado' : 'disponible',
+          disponible: !reservado
+        };
+      });
+
+      // const ahora = new Date();
+      // const horaActual = ahora.getHours();
+
+      // const conEstado = todasLasHoras.map(h => {
+      //   const horaSlot = parseInt(h.inicio.split(':')[0], 10);
+      //   const yaPaso = horaSlot <= horaActual; // la hora de inicio del bloque ya llegó o pasó
+      //   const reservado = horasOcupadas.includes(h.inicio);
+
+      //   let estado = 'disponible';
+      //   if (reservado) estado = 'ocupado';
+      //   else if (yaPaso) estado = 'pasado';
+
+      //   return {
+      //     horaInicio: h.inicio,
+      //     horaFin: h.fin,
+      //     hora: h.label,
+      //     estado,
+      //     disponible: estado === 'disponible'
+      //   };
+      // });
 
       setHorariosCancha(conEstado);
       setCargandoHorarios(false);
@@ -88,6 +116,7 @@ export default function Estudiante() {
     cargarHorarios();
   }, [subcanchaSeleccionada, fecha]);
 
+  // Trae las reservas reales del usuario logueado desde Supabase
   const cargarMisReservas = async () => {
     if (!usuarioActual) return;
 
@@ -106,8 +135,6 @@ export default function Estudiante() {
       setCargandoReservas(false);
       return;
     }
-
-    const { buscarInfoSubcancha } = await import('../data/canchasData');
 
     const reservasConNombre = data.map((r) => {
       const info = buscarInfoSubcancha(r.cancha_id);
@@ -356,25 +383,35 @@ export default function Estudiante() {
                   <p className="text-sm text-slate-500">Cargando horarios...</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {horariosMostrados.map((slot) => (
-                      <div
-                        key={slot.horaInicio}
-                        className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-all ${
-                          slot.disponible
-                            ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-700 cursor-pointer hover:shadow-md hover:-translate-y-0.5'
-                            : 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
-                        }`}
-                        onClick={() => handleSlotClick(slot)}
-                      >
-                        {slot.disponible
-                          ? <CheckCircle2 size={20} />
-                          : <XCircle size={20} />}
-                        <span className="text-sm font-semibold">{slot.hora}</span>
-                        <span className="text-xs">
-                          {slot.disponible ? 'Disponible' : 'Ocupado'}
-                        </span>
-                      </div>
-                    ))}
+                    {horariosMostrados.map((slot) => {
+                      let claseEstado = '';
+                      let textoEstado = 'Disponible';
+                      let Icono = CheckCircle2;
+
+                      if (slot.estado === 'ocupado') {
+                        claseEstado = 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed';
+                        textoEstado = 'Ocupado';
+                        Icono = XCircle;
+                      } else if (slot.estado === 'pasado') {
+                        claseEstado = 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed';
+                        textoEstado = 'No disponible';
+                        Icono = XCircle;
+                      } else {
+                        claseEstado = 'bg-gradient-to-br from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-700 cursor-pointer hover:shadow-md hover:-translate-y-0.5';
+                      }
+
+                      return (
+                        <div
+                          key={slot.horaInicio}
+                          className={`flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-center transition-all ${claseEstado}`}
+                          onClick={() => handleSlotClick(slot)}
+                        >
+                          <Icono size={20} />
+                          <span className="text-sm font-semibold">{slot.hora}</span>
+                          <span className="text-xs">{textoEstado}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

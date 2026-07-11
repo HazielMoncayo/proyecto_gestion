@@ -202,3 +202,58 @@
     min-height: 140px;
   }
 }
+
+.perm-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.perm-upload-validando {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #475569;
+  text-align: center;
+  padding: 8px;
+}
+
+.perm-upload-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #1e40af;
+  border-radius: 50%;
+  animation: perm-spin 0.7s linear infinite;
+}
+
+@keyframes perm-spin {
+  to { transform: rotate(360deg); }
+}
+
+.perm-upload-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.perm-upload-badge-ok {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.perm-upload-error {
+  font-size: 0.72rem;
+  color: #dc2626;
+  margin: 0;
+}
