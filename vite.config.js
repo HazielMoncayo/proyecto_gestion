@@ -6,4 +6,9 @@ export default defineConfig({
   server: {
     port: 3000, // para que se sienta igual que CRA
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.js',
+  },
 })
