@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, CheckCircle2, XCircle, MapPin, Users, LogOut, User, HelpCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../supaBase/supabaseClient';
 import Permisos from '../permisiones/permisiones';
 import { canchasDemo, generarHorasDelDia } from '../data/canchasData';
 
 const tabs = ['Canchas Disponibles', 'Mis Reservas'];
-const tabIcons = ['📅', '🕐'];
+const TabIcon = [Calendar, Clock];
 
 const statStyle = {
   azul:     { numero: 'text-blue-800', icono: 'bg-blue-100' },
@@ -221,11 +222,8 @@ export default function Estudiante() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-800">
+            <User size={18} />
           </div>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-medium text-slate-700">{nombreUsuario}</span>
@@ -234,13 +232,9 @@ export default function Estudiante() {
           <span className="text-xs font-semibold bg-gradient-to-r from-blue-700 to-blue-900 text-white px-3 py-1 rounded-full shadow-sm">Estudiante</span>
           <button
             className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 px-3 py-1.5 rounded-xl transition-colors"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/sign-up')}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+            <LogOut size={15} />
             Salir
           </button>
         </div>
@@ -261,7 +255,7 @@ export default function Estudiante() {
                 }`}
                 onClick={() => setTabActivo(i)}
               >
-                <span>{tabIcons[i]}</span> {tab}
+                {(() => { const Icon = TabIcon[i]; return <Icon size={16} />; })()} {tab}
               </button>
             );
           })}
@@ -291,19 +285,11 @@ export default function Estudiante() {
                     <div className="p-4">
                       <h3 className="font-bold text-slate-900 mb-1">{cancha.nombre}</h3>
                       <p className="flex items-center gap-1.5 text-xs text-slate-500 mb-1">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                          <circle cx="12" cy="10" r="3"/>
-                        </svg>
+                        <MapPin size={13} />
                         {cancha.ubicacion}
                       </p>
                       <p className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                          <circle cx="9" cy="7" r="4"/>
-                          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
+                        <Users size={13} />
                         Capacidad: {cancha.capacidad} personas
                       </p>
                       <span className="inline-block text-xs font-semibold bg-gradient-to-r from-blue-700 to-blue-900 text-white px-3 py-1 rounded-full">
@@ -346,7 +332,7 @@ export default function Estudiante() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   <div>
                     <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 tracking-tight">
-                      <span>🕐</span> Horarios Disponibles - {canchaSeleccionada.nombre} · {subcanchaSeleccionada.nombre}
+                      <Clock size={18} /> Horarios Disponibles - {canchaSeleccionada.nombre} · {subcanchaSeleccionada.nombre}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">Fecha seleccionada: {fechaFormateada}</p>
                   </div>
@@ -380,9 +366,9 @@ export default function Estudiante() {
                         }`}
                         onClick={() => handleSlotClick(slot)}
                       >
-                        <span className="text-lg leading-none">
-                          {slot.disponible ? '✅' : '❌'}
-                        </span>
+                        {slot.disponible
+                          ? <CheckCircle2 size={20} />
+                          : <XCircle size={20} />}
                         <span className="text-sm font-semibold">{slot.hora}</span>
                         <span className="text-xs">
                           {slot.disponible ? 'Disponible' : 'Ocupado'}
@@ -421,16 +407,18 @@ export default function Estudiante() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               {[
-                { label: 'Total Reservas', valor: reservas.length, color: 'azul', icon: '📅' },
-                { label: 'Confirmadas', valor: reservas.filter(r => r.estado === 'confirmada').length, color: 'verde', icon: '✅' },
-                { label: 'Pendientes', valor: reservas.filter(r => r.estado === 'pendiente').length, color: 'amarillo', icon: '🕐' },
+                { label: 'Total Reservas', valor: reservas.length, color: 'azul', Icon: Calendar },
+                { label: 'Confirmadas', valor: reservas.filter(r => r.estado === 'confirmada').length, color: 'verde', Icon: CheckCircle2 },
+                { label: 'Pendientes', valor: reservas.filter(r => r.estado === 'pendiente').length, color: 'amarillo', Icon: Clock },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-5 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-medium text-slate-500 mb-1">{s.label}</p>
                     <p className={`text-3xl font-extrabold ${statStyle[s.color].numero}`}>{s.valor}</p>
                   </div>
-                  <span className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${statStyle[s.color].icono}`}>{s.icon}</span>
+                  <span className={`w-12 h-12 rounded-xl flex items-center justify-center ${statStyle[s.color].icono} ${statStyle[s.color].numero}`}>
+                    <s.Icon size={22} />
+                  </span>
                 </div>
               ))}
             </div>
@@ -442,7 +430,7 @@ export default function Estudiante() {
                 </div>
               ) : reservasFiltradas.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center">
-                  <p className="text-3xl mb-2">📅</p>
+                  <Calendar size={32} className="mx-auto mb-2 text-slate-300" />
                   <p className="text-slate-400 text-sm">No tienes reservas en este momento.</p>
                 </div>
               ) : (
@@ -458,18 +446,20 @@ export default function Estudiante() {
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5 text-xs text-slate-500">
-                        <p>📅 {new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES', {
+                        <p className="flex items-center gap-1.5">
+                          <Calendar size={13} />
+                          {new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES', {
                           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                         })}</p>
-                        <p>🕐 {r.horaInicio} - {r.horaFin}</p>
-                        <p>📍 {r.ubicacion}</p>
+                        <p className="flex items-center gap-1.5"><Clock size={13} /> {r.horaInicio} - {r.horaFin}</p>
+                        <p className="flex items-center gap-1.5"><MapPin size={13} /> {r.ubicacion}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleCancelar(r.id)}
-                      className="text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors shrink-0"
+                      className="flex items-center gap-1.5 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors shrink-0"
                     >
-                      🗑 Cancelar
+                      <Trash2 size={15} /> Cancelar
                     </button>
                   </div>
                 ))
@@ -480,8 +470,8 @@ export default function Estudiante() {
       </main>
 
       {/* Botón ayuda */}
-      <button className="fixed bottom-6 right-6 w-13 h-13 p-3.5 rounded-full bg-gradient-to-br from-blue-800 to-blue-900 hover:scale-110 text-white text-xl font-bold shadow-lg shadow-blue-900/40 flex items-center justify-center transition-transform">
-        ?
+      <button className="fixed bottom-6 right-6 w-13 h-13 p-3.5 rounded-full bg-gradient-to-br from-blue-800 to-blue-900 hover:scale-110 text-white shadow-lg shadow-blue-900/40 flex items-center justify-center transition-transform">
+        <HelpCircle size={22} />
       </button>
 
       {/* Modal de Permisos */}

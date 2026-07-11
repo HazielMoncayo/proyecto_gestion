@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supaBase/supabaseClient';
 import { IMPLEMENTOS_POR_CATEGORIA } from '../data/canchasData';
 import './permisiones.css';
@@ -7,9 +7,27 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
   const [carnet, setCarnet] = useState(null);
   const [cedulaFrente, setCedulaFrente] = useState(null);
   const [cedulaAtras, setCedulaAtras] = useState(null);
-  const [deseaCosas, setDeseaCosas] = useState(false);
+  
+  // Estados para controlar los implementos de forma específica
+  const [quiereBalon, setQuiereBalon] = useState(false);
+  const [quiereRed, setQuiereRed] = useState(false); // Exclusivo para Vóley
+  
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
+
+  // Detectamos la categoría de la cancha para facilitar las condiciones
+  const categoriaNormalizada = cancha?.categoria?.toLowerCase() || '';
+  const esVoley = categoriaNormalizada.includes('voley') || categoriaNormalizada.includes('voleibol');
+
+  // Determina si se solicita CUALQUIER implemento
+  const deseaCosas = esVoley ? (quiereBalon || quiereRed) : quiereBalon;
+
+  // Limpiar errores si el usuario desmarca los implementos
+  useEffect(() => {
+    if (!deseaCosas) {
+      setError('');
+    }
+  }, [deseaCosas]);
 
   const handleImagenChange = (e, setImagen) => {
     const file = e.target.files[0];
@@ -43,8 +61,13 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
   };
 
   const handleAceptar = async () => {
-    if (!carnet || !cedulaFrente || !cedulaAtras) {
-      setError('Debes subir el carnet y ambos lados de la cédula.');
+    if (!carnet) {
+      setError('Debes subir el carnet estudiantil obligatoriamente.');
+      return;
+    }
+
+    if (deseaCosas && (!cedulaFrente || !cedulaAtras)) {
+      setError('Si solicitas implementos, debes subir ambos lados de la cédula.');
       return;
     }
 
@@ -61,9 +84,16 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
       }
 
       const carnetPath = await subirImagen(user.id, carnet, 'carnet');
-      const cedulaFrentePath = await subirImagen(user.id, cedulaFrente, 'cedula_frente');
-      const cedulaAtrasPath = await subirImagen(user.id, cedulaAtras, 'cedula_atras');
+      
+      let cedulaFrentePath = null;
+      let cedulaAtrasPath = null;
 
+      if (deseaCosas) {
+        cedulaFrentePath = await subirImagen(user.id, cedulaFrente, 'cedula_frente');
+        cedulaAtrasPath = await subirImagen(user.id, cedulaAtras, 'cedula_atras');
+      }
+
+      // Preparamos qué implementos se guardarán en la base de datos si lo requieres
       const { error: insertError } = await supabase.from('reservas').insert({
         cancha_id: cancha.id,
         categoria: cancha.categoria,
@@ -76,8 +106,8 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
         estado: 'pendiente',
         desea_implementos: deseaCosas,
         carnet_url: carnetPath,
-        cedula_frente_url: cedulaFrentePath,
-        cedula_atras_url: cedulaAtrasPath
+        cedula_frente_url: cedulaFrentePath, 
+        cedula_atras_url: cedulaAtrasPath    
       });
 
       if (insertError) throw insertError;
@@ -125,12 +155,54 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
         </div>
 
         {(cancha || slot) && (
-          <p className="perm-subtitulo">
+          <p className="perm-subtitulo" style={{ marginBottom: '20px' }}>
             {cancha?.nombre} {slot?.hora && `· ${slot.hora}`} {fechaFormateada && `· ${fechaFormateada}`}
           </p>
         )}
 
-        <div className="perm-imagenes">
+        {/* CONTROLES DINÁMICOS DE IMPLEMENTOS */}
+        <div style={{ marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {esVoley ? (
+            // Caso Vóley: Dos opciones separadas
+            <>
+              <p className="perm-label" style={{ margin: 0, fontSize: '0.85rem' }}>¿Necesita implementos de Vóley?</p>
+              <div style={{ display: 'flex', gap: '20px' }}>
+                <label className="perm-checkbox-row" style={{ margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={quiereBalon}
+                    onChange={(e) => setQuiereBalon(e.target.checked)}
+                    className="perm-checkbox"
+                  />
+                  <span>Pedir Balón</span>
+                </label>
+                <label className="perm-checkbox-row" style={{ margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={quiereRed}
+                    onChange={(e) => setQuiereRed(e.target.checked)}
+                    className="perm-checkbox"
+                  />
+                  <span>Pedir Red</span>
+                </label>
+              </div>
+            </>
+          ) : (
+            // Caso Fútbol / Básquet / Otros: Un solo check claro
+            <label className="perm-checkbox-row" style={{ margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={quiereBalon}
+                onChange={(e) => setQuiereBalon(e.target.checked)}
+                className="perm-checkbox"
+              />
+              <span>¿Necesita que le proporcionemos un balón para su reserva?</span>
+            </label>
+          )}
+        </div>
+
+        {/* CONTENEDOR DE IMÁGENES (Con marginBottom para evitar que se pegue al botón) */}
+        <div className="perm-imagenes" style={{ marginBottom: '30px' }}>
           <div className="perm-col-izquierda">
             <p className="perm-label">Carnet Estudiantil</p>
             <UploadBox
@@ -140,34 +212,26 @@ export default function Permisos({ cancha, fecha, fechaFormateada, slot, onClose
             />
           </div>
 
-          <div className="perm-col-derecha">
-            <p className="perm-label">Cédula</p>
-            <div className="perm-cedula-grid">
-              <UploadBox
-                label="Parte frontal"
-                imagen={cedulaFrente}
-                onChange={(e) => handleImagenChange(e, setCedulaFrente)}
-              />
-              <UploadBox
-                label="Parte atrás"
-                imagen={cedulaAtras}
-                onChange={(e) => handleImagenChange(e, setCedulaAtras)}
-              />
+          {deseaCosas && (
+            <div className="perm-col-derecha">
+              <p className="perm-label">Cédula de Identidad</p>
+              <div className="perm-cedula-grid">
+                <UploadBox
+                  label="Parte frontal"
+                  imagen={cedulaFrente}
+                  onChange={(e) => handleImagenChange(e, setCedulaFrente)}
+                />
+                <UploadBox
+                  label="Parte atrás"
+                  imagen={cedulaAtras}
+                  onChange={(e) => handleImagenChange(e, setCedulaAtras)}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <label className="perm-checkbox-row">
-          <input
-            type="checkbox"
-            checked={deseaCosas}
-            onChange={(e) => setDeseaCosas(e.target.checked)}
-            className="perm-checkbox"
-          />
-          <span>¿Deseas que te prestemos los implementos?</span>
-        </label>
-
-        {error && <p className="perm-error">{error}</p>}
+        {error && <p className="perm-error" style={{ marginBottom: '15px' }}>{error}</p>}
 
         <button className="perm-btn-aceptar" onClick={handleAceptar} disabled={enviando}>
           {enviando ? 'Enviando...' : 'Aceptar'}

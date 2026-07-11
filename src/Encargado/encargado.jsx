@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Calendar, Package, Clock, CheckCircle2, XCircle, AlertTriangle, LogOut, User, HelpCircle } from 'lucide-react';
 import { supabase } from '../supaBase/supabaseClient';
 import { buscarInfoSubcancha, IMPLEMENTOS_POR_CATEGORIA } from '../data/canchasData';
 
 const tabs = ['Gestión de Reservas', 'Inventario', 'Control de Horarios'];
-const tabIcons = ['📅', '📦', '🕐'];
+const TabIcon = [Calendar, Package, Clock];
 
 const statStyle = {
   naranja: { numero: 'text-amber-500', icono: 'bg-amber-100' },
@@ -159,23 +160,16 @@ export default function Encargado() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-blue-800">
+            <User size={18} />
           </div>
           <span className="text-sm font-medium text-slate-700">{nombreUsuario}</span>
           <span className="text-xs font-semibold bg-gradient-to-r from-blue-700 to-blue-900 text-white px-3 py-1 rounded-full shadow-sm">Encargado</span>
           <button
             className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 px-3 py-1.5 rounded-xl transition-colors"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/sign-up')}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+            <LogOut size={15} />
             Salir
           </button>
         </div>
@@ -186,7 +180,9 @@ export default function Encargado() {
         {/* Alerta inventario bajo */}
         {bajosStock.length > 0 && (
           <div className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl px-4 py-3 mb-6 shadow-sm">
-            <span className="w-9 h-9 rounded-xl bg-amber-400 text-white flex items-center justify-center text-lg shrink-0">⚠️</span>
+            <span className="w-9 h-9 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0">
+              <AlertTriangle size={18} />
+            </span>
             <div>
               <p className="font-semibold text-sm text-amber-900">Atención: Inventario Bajo</p>
               <p className="text-sm text-amber-700">{bajosStock.length} artículos están por debajo del stock mínimo</p>
@@ -209,7 +205,7 @@ export default function Encargado() {
                 }`}
                 onClick={() => setTabActivo(i)}
               >
-                <span>{tabIcons[i]}</span>
+                {(() => { const Icon = TabIcon[i]; return <Icon size={16} />; })()}
                 {tab}
                 {badge > 0 && (
                   <span className={`text-xs rounded-full px-1.5 py-0.5 ml-1 ${activo ? 'bg-white/25 text-white' : 'bg-rose-500 text-white'}`}>
@@ -224,17 +220,19 @@ export default function Encargado() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Reservas Pendientes', valor: pendientes.length,      color: 'naranja',  icon: '🕐' },
-            { label: 'Confirmadas Hoy',     valor: confirmadasHoy.length,  color: 'verde',    icon: '✅' },
-            { label: 'Items Bajo Stock',    valor: bajosStock.length,      color: 'rojo',     icon: '⚠️' },
-            { label: 'Inventario Total',    valor: totalInventario,        color: 'azul',     icon: '📦' },
+            { label: 'Reservas Pendientes', valor: pendientes.length,      color: 'naranja',  Icon: Clock },
+            { label: 'Confirmadas Hoy',     valor: confirmadasHoy.length,  color: 'verde',    Icon: CheckCircle2 },
+            { label: 'Items Bajo Stock',    valor: bajosStock.length,      color: 'rojo',     Icon: AlertTriangle },
+            { label: 'Inventario Total',    valor: totalInventario,        color: 'azul',     Icon: Package },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-slate-500 mb-1">{s.label}</p>
                 <p className={`text-3xl font-extrabold ${statStyle[s.color].numero}`}>{s.valor}</p>
               </div>
-              <span className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${statStyle[s.color].icono}`}>{s.icon}</span>
+              <span className={`w-12 h-12 rounded-xl flex items-center justify-center ${statStyle[s.color].icono} ${statStyle[s.color].numero}`}>
+                <s.Icon size={22} />
+              </span>
             </div>
           ))}
         </div>
@@ -266,16 +264,16 @@ export default function Encargado() {
                           </div>
                           <div className="flex gap-2 shrink-0">
                             <button
-                              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:shadow-md hover:scale-[1.02] text-white text-sm font-medium px-3 py-1.5 rounded-xl transition-all"
+                              className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:shadow-md hover:scale-[1.02] text-white text-sm font-medium px-3 py-1.5 rounded-xl transition-all"
                               onClick={() => handleAprobar(r.id)}
                             >
-                              ✅ Aprobar
+                              <CheckCircle2 size={15} /> Aprobar
                             </button>
                             <button
-                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-medium px-3 py-1.5 rounded-xl transition-colors"
+                              className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-medium px-3 py-1.5 rounded-xl transition-colors"
                               onClick={() => handleRechazar(r)}
                             >
-                              ❌ Rechazar
+                              <XCircle size={15} /> Rechazar
                             </button>
                           </div>
                         </div>
@@ -404,8 +402,8 @@ export default function Encargado() {
 
       </main>
 
-      <button className="fixed bottom-6 right-6 w-13 h-13 p-3.5 rounded-full bg-gradient-to-br from-blue-800 to-blue-900 hover:scale-110 text-white text-xl font-bold shadow-lg shadow-blue-900/40 flex items-center justify-center transition-transform">
-        ?
+      <button className="fixed bottom-6 right-6 w-13 h-13 p-3.5 rounded-full bg-gradient-to-br from-blue-800 to-blue-900 hover:scale-110 text-white shadow-lg shadow-blue-900/40 flex items-center justify-center transition-transform">
+        <HelpCircle size={22} />
       </button>
     </div>
   );
